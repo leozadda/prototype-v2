@@ -133,6 +133,24 @@ class WorkoutDB {
     const store = transaction.objectStore(STORES.WORKOUTS);
     return store.delete(id);
   }
+
+  async saveLastUsedSettings(templateKey, exercises) {
+    const transaction = this.db.transaction([STORES.SETTINGS], "readwrite");
+    const store = transaction.objectStore(STORES.SETTINGS);
+    const settingsKey = `lastUsed_${templateKey}`;
+    return store.put({ key: settingsKey, value: exercises });
+  }
+
+  async getLastUsedSettings(templateKey) {
+    const transaction = this.db.transaction([STORES.SETTINGS], "readonly");
+    const store = transaction.objectStore(STORES.SETTINGS);
+    const settingsKey = `lastUsed_${templateKey}`;
+    return new Promise((resolve, reject) => {
+      const request = store.get(settingsKey);
+      request.onsuccess = () => resolve(request.result?.value);
+      request.onerror = () => reject(request.error);
+    });
+  }
 }
 
 const WorkoutTracker = () => {
@@ -152,6 +170,8 @@ const WorkoutTracker = () => {
   const [showUnlockMessage, setShowUnlockMessage] = useState(false);
   const [db, setDb] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [displayTemplates, setDisplayTemplates] = useState({});
+  const [refreshDisplayTemplates, setRefreshDisplayTemplates] = useState(0);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -482,21 +502,24 @@ const WorkoutTracker = () => {
           }
 
           // Remove from workout history
-// Remove Example workouts from database and current state
-const exampleWorkouts = workouts.filter(w => w.templateName === "Example");
-if (exampleWorkouts.length > 0 && db) {
-  exampleWorkouts.forEach(async (workout) => {
-    try {
-      await db.deleteWorkout(workout.id);
-    } catch (error) {
-      console.error("Failed to delete Example workout:", error);
-    }
-  });
-}
+          // Remove Example workouts from database and current state
+          const exampleWorkouts = workouts.filter(
+            (w) => w.templateName === "Example"
+          );
+          if (exampleWorkouts.length > 0 && db) {
+            exampleWorkouts.forEach(async (workout) => {
+              try {
+                await db.deleteWorkout(workout.id);
+              } catch (error) {
+                console.error("Failed to delete Example workout:", error);
+              }
+            });
+          }
 
-// Remove from current state immediately
-setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
-
+          // Remove from current state immediately
+          setWorkouts((prev) =>
+            prev.filter((w) => w.templateName !== "Example")
+          );
         }
 
         setWorkouts(savedWorkouts || []);
@@ -557,18 +580,30 @@ setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
   }, [pinnedTemplates, db, isLoading]);
 
   useEffect(() => {
-    if (!db || isLoading) return;
-
-    const saveFirstTimeFlag = async () => {
-      try {
-        await db.saveSetting("isFirstTime", isFirstTime);
-      } catch (error) {
-        console.error("Failed to save first time flag:", error);
+    if (!db || isLoading || Object.keys(templates).length === 0) return;
+    
+    const updateDisplayTemplates = async () => {
+      const updated = { ...templates }; // Start with original templates
+      
+      for (const [key, template] of Object.entries(templates)) {
+        try {
+          const lastUsedSettings = await db.getLastUsedSettings(key);
+          if (lastUsedSettings && lastUsedSettings.length > 0) {
+            updated[key] = {
+              ...template,
+              exercises: lastUsedSettings
+            };
+          }
+        } catch (error) {
+          console.error(`Failed to load settings for ${key}:`, error);
+          // Keep original template on error
+        }
       }
+      setDisplayTemplates(updated);
     };
-
-    saveFirstTimeFlag();
-  }, [isFirstTime, db, isLoading]);
+    
+    updateDisplayTemplates();
+  }, [templates, db, isLoading, refreshDisplayTemplates]);
 
   const unlockRealTemplates = async () => {
     // Remove beginner template from current templates
@@ -625,12 +660,45 @@ setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
     return { streak, lastWorkout: workoutDates.includes(today) };
   };
 
-  const startWorkout = (templateKey) => {
+  const startWorkout = async (templateKey) => {
     const template = templates[templateKey];
-    const exercises = template.exercises.map((ex) => ({
-      ...ex,
-      id: Math.random().toString(36).substr(2, 9),
-    }));
+    let exercises;
+
+    // Try to load last used settings
+    if (db) {
+      try {
+        const lastUsedSettings = await db.getLastUsedSettings(templateKey);
+        if (lastUsedSettings) {
+          // Merge last used settings with template exercises
+          // Start with last used settings if available, otherwise use template
+          const baseExercises =
+            lastUsedSettings && lastUsedSettings.length > 0
+              ? lastUsedSettings
+              : template.exercises;
+
+          exercises = baseExercises.map((ex) => ({
+            ...ex,
+            id: Math.random().toString(36).substr(2, 9),
+          }));
+        } else {
+          exercises = template.exercises.map((ex) => ({
+            ...ex,
+            id: Math.random().toString(36).substr(2, 9),
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load last used settings:", error);
+        exercises = template.exercises.map((ex) => ({
+          ...ex,
+          id: Math.random().toString(36).substr(2, 9),
+        }));
+      }
+    } else {
+      exercises = template.exercises.map((ex) => ({
+        ...ex,
+        id: Math.random().toString(36).substr(2, 9),
+      }));
+    }
 
     setCurrentWorkout({
       type: templateKey,
@@ -982,6 +1050,18 @@ setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
     const logDuration = endTime - logStartTime;
     const currentVolume = calculateVolume(currentWorkout.exercises);
 
+    // Save last used settings for this template
+    if (db) {
+      try {
+        const exerciseSettings = currentWorkout.exercises.map(
+          ({ id, bodyPart, ...exercise }) => exercise
+        );
+        await db.saveLastUsedSettings(currentWorkout.type, exerciseSettings);
+      } catch (error) {
+        console.error("Failed to save last used settings:", error);
+      }
+    }
+
     const completedWorkout = {
       ...currentWorkout,
       volume: currentVolume,
@@ -1015,6 +1095,10 @@ setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
 
     setShowResult(true);
     setCurrentWorkout(null);
+
+
+    // Trigger refresh of display templates
+setRefreshDisplayTemplates(prev => prev + 1);
   };
 
   const formatTime = (seconds) => {
@@ -1486,100 +1570,112 @@ setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
             </div>
           </div>
         )}
+        {
+          ()=>{
+            console.log('Templates:', Object.keys(templates));
+console.log('DisplayTemplates:', Object.keys(displayTemplates));
+console.log('SortedTemplates:', sortedTemplates.map(([key]) => key));
+          }
+        }
 
-        <div className="grid gap-4">
-          {sortedTemplates.map(([templateKey, template]) => {
-            const isPinned = pinnedTemplates.includes(templateKey);
-            const isLocked = isFirstTime && templateKey !== "beginner";
-            const canDelete =
-              !["beginner"].includes(templateKey) &&
-              Object.keys(templates).length > 1;
+<div className="grid gap-4">
+  {sortedTemplates.map(([templateKey, template]) => {
+    // Use displayTemplate if available, otherwise fall back to original template
+    const displayTemplate = displayTemplates[templateKey] || template;
+      
+    const isPinned = pinnedTemplates.includes(templateKey);
+    const isLocked = isFirstTime && templateKey !== "beginner";
+    const canDelete =
+      !["beginner"].includes(templateKey) &&
+      Object.keys(templates).length > 1;
 
-            return (
-              <div
-                key={templateKey}
-                className={`group relative rounded-xl p-6 border transition-all duration-200 ${
-                  isLocked
-                    ? "bg-gray-100 border-gray-200 opacity-30 cursor-not-allowed"
-                    : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 cursor-pointer"
-                }`}
-                onClick={
-                  !isLocked ? () => startWorkout(templateKey) : undefined
-                }
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-3">
-                      <div className="text-2xl mr-3">{template.emoji}</div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-lg">
-                          {template.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {template.exercises.length} exercise
-                          {template.exercises.length !== 1 ? "s" : ""}
-                        </p>
-                      </div>
-                      {isLocked && (
-                        <Lock className="w-4 h-4 text-gray-400 ml-2" />
-                      )}
-                    </div>
-
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {template.exercises.slice(0, 3).map((exercise, index) => (
-                        <div key={index} className="flex justify-between">
-                          <span>{exercise.name}</span>
-                          <span className="font-mono text-xs text-gray-500">
-                            {exercise.sets} × {exercise.reps} @{" "}
-                            {exercise.weight}lbs
-                          </span>
-                        </div>
-                      ))}
-                      {template.exercises.length > 3 && (
-                        <div className="text-xs text-gray-400 italic">
-                          +{template.exercises.length - 3} more exercise
-                          {template.exercises.length - 3 !== 1 ? "s" : ""}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {!isLocked && (
-                    <div className="flex items-start space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePinTemplate(templateKey);
-                        }}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isPinned
-                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                        }`}
-                        title={isPinned ? "Unpin template" : "Pin template"}
-                      >
-                        <Pin className="w-4 h-4" />
-                      </button>
-
-                      {canDelete && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTemplate(templateKey);
-                          }}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Delete template"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+    return (
+      <div
+        key={templateKey}
+        className={`group relative rounded-xl p-6 border transition-all duration-200 ${
+          isLocked
+            ? "bg-gray-100 border-gray-200 opacity-30 cursor-not-allowed"
+            : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 cursor-pointer"
+        }`}
+        onClick={
+          !isLocked
+            ? async () => await startWorkout(templateKey)
+            : undefined
+        }
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center mb-3">
+              <div className="text-2xl mr-3">{displayTemplate.emoji}</div>
+              <div>
+                <h3 className="font-semibold text-gray-900 text-lg">
+                  {displayTemplate.name}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {displayTemplate.exercises.length} exercise
+                  {displayTemplate.exercises.length !== 1 ? "s" : ""}
+                </p>
               </div>
-            );
-          })}
+              {isLocked && (
+                <Lock className="w-4 h-4 text-gray-400 ml-2" />
+              )}
+            </div>
+
+            <div className="text-sm text-gray-600 space-y-1">
+              {displayTemplate.exercises.slice(0, 3).map((exercise, index) => (
+                <div key={index} className="flex justify-between">
+                  <span>{exercise.name}</span>
+                  <span className="font-mono text-xs text-gray-500">
+                    {exercise.sets} × {exercise.reps} @{" "}
+                    {exercise.weight}lbs
+                  </span>
+                </div>
+              ))}
+              {displayTemplate.exercises.length > 3 && (
+                <div className="text-xs text-gray-400 italic">
+                  +{displayTemplate.exercises.length - 3} more exercise
+                  {displayTemplate.exercises.length - 3 !== 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {!isLocked && (
+            <div className="flex items-start space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  togglePinTemplate(templateKey);
+                }}
+                className={`p-2 rounded-lg transition-colors ${
+                  isPinned
+                    ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                }`}
+                title={isPinned ? "Unpin template" : "Pin template"}
+              >
+                <Pin className="w-4 h-4" />
+              </button>
+
+              {canDelete && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteTemplate(templateKey);
+                  }}
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete template"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
+      </div>
+    );
+  })}
+</div>
 
         {Object.keys(templates).length === 0 && (
           <div className="text-center py-16">
