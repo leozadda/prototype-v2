@@ -39,7 +39,7 @@ const WorkoutTracker = () => {
 
   // First-time user template
   const beginnerTemplate = {
-    name: "What did you lift today?",
+    name: "Example",
     emoji: "🤔",
     color: "bg-gradient-to-r from-blue-500 to-purple-600",
     exercises: [
