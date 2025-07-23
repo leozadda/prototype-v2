@@ -127,6 +127,12 @@ class WorkoutDB {
       request.onerror = () => reject(request.error);
     });
   }
+
+  async deleteWorkout(id) {
+    const transaction = this.db.transaction([STORES.WORKOUTS], "readwrite");
+    const store = transaction.objectStore(STORES.WORKOUTS);
+    return store.delete(id);
+  }
 }
 
 const WorkoutTracker = () => {
@@ -458,12 +464,49 @@ const WorkoutTracker = () => {
           database.getSetting("isFirstTime"),
         ]);
 
+        // Temporary debug - add this right after the Promise.all
+        console.log("Debug - savedIsFirstTime:", savedIsFirstTime);
+        console.log("Debug - savedTemplates:", Object.keys(savedTemplates));
+        console.log(
+          "Debug - savedWorkouts with beginner:",
+          (savedWorkouts || []).filter((w) => w.type === "beginner").length
+        );
+
+        // Auto-remove beginner template if user is no longer first-time
+        // Auto-remove beginner template if user is no longer first-time
+        if (savedIsFirstTime === false) {
+          // Remove from templates
+          if (savedTemplates.beginner) {
+            delete savedTemplates.beginner;
+            await database.deleteTemplate("beginner");
+          }
+
+          // Remove from workout history
+// Remove Example workouts from database and current state
+const exampleWorkouts = workouts.filter(w => w.templateName === "Example");
+if (exampleWorkouts.length > 0 && db) {
+  exampleWorkouts.forEach(async (workout) => {
+    try {
+      await db.deleteWorkout(workout.id);
+    } catch (error) {
+      console.error("Failed to delete Example workout:", error);
+    }
+  });
+}
+
+// Remove from current state immediately
+setWorkouts(prev => prev.filter(w => w.templateName !== "Example"));
+
+        }
+
         setWorkouts(savedWorkouts || []);
 
         // Initialize templates - show all templates but lock non-beginner ones for first-time users
         const initialTemplates =
           Object.keys(savedTemplates).length > 0
             ? savedTemplates
+            : savedIsFirstTime === false
+            ? realTemplates
             : { beginner: beginnerTemplate, ...realTemplates };
 
         setTemplates(initialTemplates);
@@ -528,8 +571,9 @@ const WorkoutTracker = () => {
   }, [isFirstTime, db, isLoading]);
 
   const unlockRealTemplates = async () => {
-    const allTemplates = { ...templates, ...realTemplates };
-    setTemplates(allTemplates);
+    // Remove beginner template from current templates
+    const { beginner, ...remainingTemplates } = templates;
+    setTemplates({ ...remainingTemplates, ...realTemplates });
     setIsFirstTime(false);
     setShowUnlockMessage(true);
 
@@ -1451,11 +1495,6 @@ const WorkoutTracker = () => {
               !["beginner"].includes(templateKey) &&
               Object.keys(templates).length > 1;
 
-            console.log("Debug:", {
-              isFirstTime,
-              templateKey,
-              isLocked: isFirstTime && templateKey !== "beginner",
-            });
             return (
               <div
                 key={templateKey}
