@@ -460,15 +460,16 @@ const WorkoutTracker = () => {
 
         setWorkouts(savedWorkouts || []);
 
-        // Initialize templates
+        // Initialize templates - show all templates but lock non-beginner ones for first-time users
         const initialTemplates =
           Object.keys(savedTemplates).length > 0
             ? savedTemplates
-            : { beginner: beginnerTemplate };
+            : { beginner: beginnerTemplate, ...realTemplates };
+
         setTemplates(initialTemplates);
 
         setPinnedTemplates(savedPinnedTemplates || []);
-        setIsFirstTime(savedIsFirstTime !== false); // Default to true if not set
+        setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error);
         // Fallback to in-memory state
@@ -1450,13 +1451,18 @@ const WorkoutTracker = () => {
               !["beginner"].includes(templateKey) &&
               Object.keys(templates).length > 1;
 
+            console.log("Debug:", {
+              isFirstTime,
+              templateKey,
+              isLocked: isFirstTime && templateKey !== "beginner",
+            });
             return (
               <div
                 key={templateKey}
-                className={`group relative bg-white rounded-xl p-6 border border-gray-200 transition-all duration-200 ${
+                className={`group relative rounded-xl p-6 border transition-all duration-200 ${
                   isLocked
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:shadow-md hover:border-gray-300 cursor-pointer"
+                    ? "bg-gray-100 border-gray-200 opacity-30 cursor-not-allowed"
+                    : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 cursor-pointer"
                 }`}
                 onClick={
                   !isLocked ? () => startWorkout(templateKey) : undefined
