@@ -12,6 +12,123 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+// IndexedDB utility functions
+const DB_NAME = "WorkoutTrackerDB";
+const DB_VERSION = 1;
+const STORES = {
+  WORKOUTS: "workouts",
+  TEMPLATES: "templates",
+  SETTINGS: "settings",
+};
+
+class WorkoutDB {
+  constructor() {
+    this.db = null;
+  }
+
+  async init() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve(this.db);
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+
+        // Create workouts store
+        if (!db.objectStoreNames.contains(STORES.WORKOUTS)) {
+          const workoutStore = db.createObjectStore(STORES.WORKOUTS, {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          workoutStore.createIndex("date", "date", { unique: false });
+          workoutStore.createIndex("templateName", "templateName", {
+            unique: false,
+          });
+        }
+
+        // Create templates store
+        if (!db.objectStoreNames.contains(STORES.TEMPLATES)) {
+          db.createObjectStore(STORES.TEMPLATES, { keyPath: "key" });
+        }
+
+        // Create settings store
+        if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
+          db.createObjectStore(STORES.SETTINGS, { keyPath: "key" });
+        }
+      };
+    });
+  }
+
+  async saveWorkout(workout) {
+    const transaction = this.db.transaction([STORES.WORKOUTS], "readwrite");
+    const store = transaction.objectStore(STORES.WORKOUTS);
+    return store.add({
+      ...workout,
+      id: Date.now() + Math.random(), // Ensure unique ID
+    });
+  }
+
+  async getAllWorkouts() {
+    const transaction = this.db.transaction([STORES.WORKOUTS], "readonly");
+    const store = transaction.objectStore(STORES.WORKOUTS);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveTemplate(key, template) {
+    const transaction = this.db.transaction([STORES.TEMPLATES], "readwrite");
+    const store = transaction.objectStore(STORES.TEMPLATES);
+    return store.put({ key, ...template });
+  }
+
+  async getAllTemplates() {
+    const transaction = this.db.transaction([STORES.TEMPLATES], "readonly");
+    const store = transaction.objectStore(STORES.TEMPLATES);
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+      request.onsuccess = () => {
+        const templates = {};
+        request.result.forEach((item) => {
+          const { key, ...template } = item;
+          templates[key] = template;
+        });
+        resolve(templates);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async deleteTemplate(key) {
+    const transaction = this.db.transaction([STORES.TEMPLATES], "readwrite");
+    const store = transaction.objectStore(STORES.TEMPLATES);
+    return store.delete(key);
+  }
+
+  async saveSetting(key, value) {
+    const transaction = this.db.transaction([STORES.SETTINGS], "readwrite");
+    const store = transaction.objectStore(STORES.SETTINGS);
+    return store.put({ key, value });
+  }
+
+  async getSetting(key) {
+    const transaction = this.db.transaction([STORES.SETTINGS], "readonly");
+    const store = transaction.objectStore(STORES.SETTINGS);
+    return new Promise((resolve, reject) => {
+      const request = store.get(key);
+      request.onsuccess = () => resolve(request.result?.value);
+      request.onerror = () => reject(request.error);
+    });
+  }
+}
+
 const WorkoutTracker = () => {
   const [workouts, setWorkouts] = useState([]);
   const [templates, setTemplates] = useState({});
@@ -27,6 +144,8 @@ const WorkoutTracker = () => {
   const [pinnedTemplates, setPinnedTemplates] = useState([]);
   const [isFirstTime, setIsFirstTime] = useState(true);
   const [showUnlockMessage, setShowUnlockMessage] = useState(false);
+  const [db, setDb] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -45,24 +164,24 @@ const WorkoutTracker = () => {
     exercises: [
       {
         name: "Grocery Carries",
-        sets: 1,
-        reps: 10,
-        weight: 25,
+        sets: 0,
+        reps: 0,
+        weight: 0,
         bodyPart: "full body",
       },
       {
         name: "Overhead Phone Press",
-        sets: 1,
-        reps: 15,
-        weight: 0.5,
+        sets: 0,
+        reps: 0,
+        weight: 0,
         bodyPart: "shoulders",
       },
-      { name: "Jar Opens", sets: 1, reps: 8, weight: 5, bodyPart: "forearms" },
+      { name: "Jar Opens", sets: 0, reps: 0, weight: 0, bodyPart: "forearms" },
       {
         name: "Couch Squats",
-        sets: 1,
-        reps: 12,
-        weight: 180,
+        sets: 0,
+        reps: 0,
+        weight: 0,
         bodyPart: "quads",
       },
     ],
@@ -318,12 +437,96 @@ const WorkoutTracker = () => {
     },
   };
 
-  // Initialize with beginner template on mount
+  // Initialize database and load data
   useEffect(() => {
-    setTemplates({ beginner: beginnerTemplate });
+    const initDB = async () => {
+      try {
+        const database = new WorkoutDB();
+        await database.init();
+        setDb(database);
+
+        // Load data from IndexedDB
+        const [
+          savedWorkouts,
+          savedTemplates,
+          savedPinnedTemplates,
+          savedIsFirstTime,
+        ] = await Promise.all([
+          database.getAllWorkouts(),
+          database.getAllTemplates(),
+          database.getSetting("pinnedTemplates"),
+          database.getSetting("isFirstTime"),
+        ]);
+
+        setWorkouts(savedWorkouts || []);
+
+        // Initialize templates
+        const initialTemplates =
+          Object.keys(savedTemplates).length > 0
+            ? savedTemplates
+            : { beginner: beginnerTemplate };
+        setTemplates(initialTemplates);
+
+        setPinnedTemplates(savedPinnedTemplates || []);
+        setIsFirstTime(savedIsFirstTime !== false); // Default to true if not set
+      } catch (error) {
+        console.error("Failed to initialize IndexedDB:", error);
+        // Fallback to in-memory state
+        setTemplates({ beginner: beginnerTemplate });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initDB();
   }, []);
 
-  const unlockRealTemplates = () => {
+  // Save data to IndexedDB when state changes
+  useEffect(() => {
+    if (!db || isLoading) return;
+
+    const saveTemplates = async () => {
+      try {
+        for (const [key, template] of Object.entries(templates)) {
+          await db.saveTemplate(key, template);
+        }
+      } catch (error) {
+        console.error("Failed to save templates:", error);
+      }
+    };
+
+    saveTemplates();
+  }, [templates, db, isLoading]);
+
+  useEffect(() => {
+    if (!db || isLoading) return;
+
+    const savePinnedTemplates = async () => {
+      try {
+        await db.saveSetting("pinnedTemplates", pinnedTemplates);
+      } catch (error) {
+        console.error("Failed to save pinned templates:", error);
+      }
+    };
+
+    savePinnedTemplates();
+  }, [pinnedTemplates, db, isLoading]);
+
+  useEffect(() => {
+    if (!db || isLoading) return;
+
+    const saveFirstTimeFlag = async () => {
+      try {
+        await db.saveSetting("isFirstTime", isFirstTime);
+      } catch (error) {
+        console.error("Failed to save first time flag:", error);
+      }
+    };
+
+    saveFirstTimeFlag();
+  }, [isFirstTime, db, isLoading]);
+
+  const unlockRealTemplates = async () => {
     const allTemplates = { ...templates, ...realTemplates };
     setTemplates(allTemplates);
     setIsFirstTime(false);
@@ -689,13 +892,22 @@ const WorkoutTracker = () => {
     setCompletedWorkoutData(null);
   };
 
-  const deleteTemplate = (templateKey) => {
+  const deleteTemplate = async (templateKey) => {
     if (["beginner"].includes(templateKey)) return;
     if (Object.keys(templates).length <= 1) return;
 
     const { [templateKey]: deleted, ...remaining } = templates;
     setTemplates(remaining);
     setPinnedTemplates((prev) => prev.filter((key) => key !== templateKey));
+
+    // Delete from IndexedDB
+    if (db) {
+      try {
+        await db.deleteTemplate(templateKey);
+      } catch (error) {
+        console.error("Failed to delete template from IndexedDB:", error);
+      }
+    }
   };
 
   const togglePinTemplate = (templateKey) => {
@@ -720,7 +932,7 @@ const WorkoutTracker = () => {
     return [...pinned, ...unpinned];
   };
 
-  const finishWorkout = () => {
+  const finishWorkout = async () => {
     const endTime = Date.now();
     const logDuration = endTime - logStartTime;
     const currentVolume = calculateVolume(currentWorkout.exercises);
@@ -733,6 +945,15 @@ const WorkoutTracker = () => {
 
     setCompletedWorkoutData(completedWorkout);
     setWorkouts((prev) => [...prev, completedWorkout]);
+
+    // Save to IndexedDB
+    if (db) {
+      try {
+        await db.saveWorkout(completedWorkout);
+      } catch (error) {
+        console.error("Failed to save workout to IndexedDB:", error);
+      }
+    }
 
     // If this was the first workout (beginner template), unlock real templates
     if (isFirstTime && currentWorkout.type === "beginner") {
@@ -1318,7 +1539,7 @@ const WorkoutTracker = () => {
         {Object.keys(templates).length === 0 && (
           <div className="text-center py-16">
             <div className="text-4xl mb-4">💪</div>
-            <p className="text-gray-500">No workout templates yet</p>
+            <p className="text-gray-500">No workout templates</p>
           </div>
         )}
       </div>
