@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { detectAdvancedStagnation } from "./algo/detectAdvancedStagnation";
+import { getProgressInsights } from "./algo/detectAdvancedStagnation";
 import {
   Plus,
   Trash2,
@@ -10,6 +12,8 @@ import {
   Pin,
   Lock,
   CheckCircle,
+  Check,
+  X,
 } from "lucide-react";
 
 // IndexedDB utility functions
@@ -172,6 +176,7 @@ const WorkoutTracker = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [displayTemplates, setDisplayTemplates] = useState({});
   const [refreshDisplayTemplates, setRefreshDisplayTemplates] = useState(0);
+  const [progressInsights, setProgressInsights] = useState(null);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -581,17 +586,17 @@ const WorkoutTracker = () => {
 
   useEffect(() => {
     if (!db || isLoading || Object.keys(templates).length === 0) return;
-    
+
     const updateDisplayTemplates = async () => {
       const updated = { ...templates }; // Start with original templates
-      
+
       for (const [key, template] of Object.entries(templates)) {
         try {
           const lastUsedSettings = await db.getLastUsedSettings(key);
           if (lastUsedSettings && lastUsedSettings.length > 0) {
             updated[key] = {
               ...template,
-              exercises: lastUsedSettings
+              exercises: lastUsedSettings,
             };
           }
         } catch (error) {
@@ -601,9 +606,28 @@ const WorkoutTracker = () => {
       }
       setDisplayTemplates(updated);
     };
-    
+
     updateDisplayTemplates();
   }, [templates, db, isLoading, refreshDisplayTemplates]);
+
+  useEffect(() => {
+    if (workouts.length > 0) {
+      const insights = getProgressInsights(workouts);
+      if (insights?.primaryIssue && workouts.length > 0) {
+        // Find the most recent workout that contains this exercise to determine the template
+        const exerciseName = insights.primaryIssue.exerciseName;
+        const recentWorkoutsWithExercise = workouts
+          .filter((w) => w.exercises?.some((ex) => ex.name === exerciseName))
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (recentWorkoutsWithExercise.length > 0) {
+          insights.primaryIssue.templateKey =
+            recentWorkoutsWithExercise[0].type;
+        }
+      }
+      setProgressInsights(insights);
+    }
+  }, [workouts]);
 
   const unlockRealTemplates = async () => {
     // Remove beginner template from current templates
@@ -1096,9 +1120,8 @@ const WorkoutTracker = () => {
     setShowResult(true);
     setCurrentWorkout(null);
 
-
     // Trigger refresh of display templates
-setRefreshDisplayTemplates(prev => prev + 1);
+    setRefreshDisplayTemplates((prev) => prev + 1);
   };
 
   const formatTime = (seconds) => {
@@ -1122,6 +1145,64 @@ setRefreshDisplayTemplates(prev => prev + 1);
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleProgressSuggestion = async (action) => {
+    if (action === "accept" && progressInsights?.primaryIssue) {
+      const { exerciseName, suggestedWeight, suggestedReps } =
+        progressInsights.primaryIssue;
+      const templateKey = progressInsights.primaryIssue.templateKey;
+      if (!templateKey) {
+        console.error("No template key found in progress insights");
+        return;
+      }
+
+      const updatedTemplate = {
+        ...templates[templateKey],
+        exercises: templates[templateKey].exercises.map((exercise) =>
+          exercise.name === exerciseName
+            ? {
+                ...exercise,
+                weight: suggestedWeight || exercise.weight,
+                reps: suggestedReps || exercise.reps,
+              }
+            : exercise
+        ),
+      };
+
+      // Update state
+      setTemplates((prev) => ({
+        ...prev,
+        [templateKey]: updatedTemplate,
+      }));
+
+      // Save to IndexedDB
+      if (db) {
+        try {
+          await db.saveTemplate(templateKey, updatedTemplate);
+        } catch (error) {
+          console.error("Failed to save updated template:", error);
+        }
+      }
+
+      // Force refresh of display templates
+      setRefreshDisplayTemplates((prev) => prev + 1);
+
+      // Also update the last used settings so the display template reflects the change
+      if (db) {
+        try {
+          const updatedExerciseSettings = updatedTemplate.exercises.map(
+            ({ bodyPart, ...exercise }) => exercise
+          );
+          await db.saveLastUsedSettings(templateKey, updatedExerciseSettings);
+        } catch (error) {
+          console.error("Failed to save updated last used settings:", error);
+        }
+      }
+    }
+
+    // Clear the insight for both accept and reject
+    setProgressInsights(null);
   };
 
   // History View
@@ -1570,112 +1651,145 @@ setRefreshDisplayTemplates(prev => prev + 1);
             </div>
           </div>
         )}
-        {
-          ()=>{
-            console.log('Templates:', Object.keys(templates));
-console.log('DisplayTemplates:', Object.keys(displayTemplates));
-console.log('SortedTemplates:', sortedTemplates.map(([key]) => key));
-          }
-        }
-
-<div className="grid gap-4">
-  {sortedTemplates.map(([templateKey, template]) => {
-    // Use displayTemplate if available, otherwise fall back to original template
-    const displayTemplate = displayTemplates[templateKey] || template;
-      
-    const isPinned = pinnedTemplates.includes(templateKey);
-    const isLocked = isFirstTime && templateKey !== "beginner";
-    const canDelete =
-      !["beginner"].includes(templateKey) &&
-      Object.keys(templates).length > 1;
-
-    return (
-      <div
-        key={templateKey}
-        className={`group relative rounded-xl p-6 border transition-all duration-200 ${
-          isLocked
-            ? "bg-gray-100 border-gray-200 opacity-30 cursor-not-allowed"
-            : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 cursor-pointer"
-        }`}
-        onClick={
-          !isLocked
-            ? async () => await startWorkout(templateKey)
-            : undefined
-        }
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center mb-3">
-              <div className="text-2xl mr-3">{displayTemplate.emoji}</div>
-              <div>
-                <h3 className="font-semibold text-gray-900 text-lg">
-                  {displayTemplate.name}
-                </h3>
-                <p className="text-sm text-gray-500">
-                  {displayTemplate.exercises.length} exercise
-                  {displayTemplate.exercises.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-              {isLocked && (
-                <Lock className="w-4 h-4 text-gray-400 ml-2" />
-              )}
-            </div>
-
-            <div className="text-sm text-gray-600 space-y-1">
-              {displayTemplate.exercises.slice(0, 3).map((exercise, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{exercise.name}</span>
-                  <span className="font-mono text-xs text-gray-500">
-                    {exercise.sets} × {exercise.reps} @{" "}
-                    {exercise.weight}lbs
-                  </span>
-                </div>
-              ))}
-              {displayTemplate.exercises.length > 3 && (
-                <div className="text-xs text-gray-400 italic">
-                  +{displayTemplate.exercises.length - 3} more exercise
-                  {displayTemplate.exercises.length - 3 !== 1 ? "s" : ""}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {!isLocked && (
-            <div className="flex items-start space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  togglePinTemplate(templateKey);
-                }}
-                className={`p-2 rounded-lg transition-colors ${
-                  isPinned
-                    ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                }`}
-                title={isPinned ? "Unpin template" : "Pin template"}
-              >
-                <Pin className="w-4 h-4" />
-              </button>
-
-              {canDelete && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteTemplate(templateKey);
-                  }}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Delete template"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          )}
+{/* Progress Insights */}
+{progressInsights?.hasIssues && (
+  <div className="mb-6 p-4 bg-blue-50 border border-blue-400 rounded-xl">
+    <div className="flex items-start">
+      <div className="text-2xl mr-3">💡</div>
+      <div className="flex-1">
+        <h3 className="font-medium text-blue-900 mb-1">
+          {progressInsights.primaryIssue.exerciseName} -{" "}
+          {progressInsights.primaryIssue.pattern}
+        </h3>
+        <p className="text-blue-800 text-sm mb-2">
+          {progressInsights.primaryIssue.message}
+        </p>
+        <p className="text-blue-700 text-sm font-medium mb-3">
+          💪 {progressInsights.primaryIssue.suggestion}
+        </p>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleProgressSuggestion("accept")}
+            className="border border-blue-400 bg-grey-100 text-blue-700 px-2 py-1 rounded-xl text-xs font-xs hover:bg-blue-100 transition-colors"
+          >
+            <Check/>
+          </button>
+          <button
+            onClick={() => handleProgressSuggestion("reject")}
+            className="border border-blue-400 bg-grey-100 text-blue-700 px-2 py-1 rounded-xl text-xs font-xs hover:bg-blue-100 transition-colors"
+          >
+            <X/>
+          </button>
         </div>
       </div>
-    );
-  })}
-</div>
+    </div>
+  </div>
+)}
+
+        <div className="grid gap-4">
+          {sortedTemplates.map(([templateKey, template]) => {
+            // Use displayTemplate if available, otherwise fall back to original template
+            const displayTemplate = displayTemplates[templateKey] || template;
+
+            const isPinned = pinnedTemplates.includes(templateKey);
+            const isLocked = isFirstTime && templateKey !== "beginner";
+            const canDelete =
+              !["beginner"].includes(templateKey) &&
+              Object.keys(templates).length > 1;
+
+            return (
+              <div
+                key={templateKey}
+                className={`group relative rounded-xl p-6 border transition-all duration-200 ${
+                  isLocked
+                    ? "bg-gray-100 border-gray-200 opacity-30 cursor-not-allowed"
+                    : "bg-white border-gray-200 hover:shadow-md hover:border-gray-300 cursor-pointer"
+                }`}
+                onClick={
+                  !isLocked
+                    ? async () => await startWorkout(templateKey)
+                    : undefined
+                }
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-3">
+                      <div className="text-2xl mr-3">
+                        {displayTemplate.emoji}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 text-lg">
+                          {displayTemplate.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {displayTemplate.exercises.length} exercise
+                          {displayTemplate.exercises.length !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      {isLocked && (
+                        <Lock className="w-4 h-4 text-gray-400 ml-2" />
+                      )}
+                    </div>
+
+                    <div className="text-sm text-gray-600 space-y-1">
+                      {displayTemplate.exercises
+                        .slice(0, 3)
+                        .map((exercise, index) => (
+                          <div key={index} className="flex justify-between">
+                            <span>{exercise.name}</span>
+                            <span className="font-mono text-xs text-gray-500">
+                              {exercise.sets} × {exercise.reps} @{" "}
+                              {exercise.weight}lbs
+                            </span>
+                          </div>
+                        ))}
+                      {displayTemplate.exercises.length > 3 && (
+                        <div className="text-xs text-gray-400 italic">
+                          +{displayTemplate.exercises.length - 3} more exercise
+                          {displayTemplate.exercises.length - 3 !== 1
+                            ? "s"
+                            : ""}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isLocked && (
+                    <div className="flex items-start space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePinTemplate(templateKey);
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          isPinned
+                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
+                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        }`}
+                        title={isPinned ? "Unpin template" : "Pin template"}
+                      >
+                        <Pin className="w-4 h-4" />
+                      </button>
+
+                      {canDelete && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTemplate(templateKey);
+                          }}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete template"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {Object.keys(templates).length === 0 && (
           <div className="text-center py-16">
