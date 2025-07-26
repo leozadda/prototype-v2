@@ -1362,9 +1362,7 @@ const WorkoutTracker = () => {
           {showSaveTemplate && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-                <h3 className="text-lg font-semibold mb-4">
-                  New Template
-                </h3>
+                <h3 className="text-lg font-semibold mb-4">New Template</h3>
                 <input
                   type="text"
                   value={newTemplateName}
@@ -1386,7 +1384,7 @@ const WorkoutTracker = () => {
                   </button>
                   <button
                     onClick={() => setShowSaveTemplate(false)}
-className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                    className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
                   >
                     Cancel
                   </button>
@@ -1398,12 +1396,6 @@ className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounde
       </div>
     );
   }
-
-
-
-
-
-
 
   // Workout Logging View
   if (currentWorkout) {
@@ -1434,142 +1426,140 @@ className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounde
             </button>
           </div>
 
-
-
-
           <div className="space-y-4 mb-8">
-  {currentWorkout.exercises.map((exercise) => (
-    <div
-      key={exercise.id}
-      className="bg-white rounded-xl p-4 border border-gray-200"
-    >
-      <div className="flex items-center justify-between mb-4">
-        <input
-          type="text"
-          value={exercise.name}
-          onChange={(e) =>
-            updateExercise(exercise.id, "name", e.target.value)
-          }
-          className="font-medium text-gray-900 bg-transparent border-none outline-none flex-1 text-lg"
-        />
-        <div className="flex space-x-2">
-          <button
-            onClick={() => duplicateExercise(exercise.id)}
-            className="text-blue-600 hover:text-blue-800 p-3 sm:p-2 hover:bg-blue-50 rounded-lg transition-colors"
-          >
-            <Copy className="w-5 h-5 sm:w-4 sm:h-4" />
-          </button>
-          <button
-            onClick={() => removeExercise(exercise.id)}
-            className="text-red-600 hover:text-red-800 p-3 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
-            title="Remove exercise"
-          >
-            <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
-          </button>
-        </div>
-      </div>
+            {currentWorkout.exercises.map((exercise) => (
+              <div
+                key={exercise.id}
+                className="bg-white rounded-xl p-4 border border-gray-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <input
+                    type="text"
+                    value={exercise.name}
+                    onChange={(e) =>
+                      updateExercise(exercise.id, "name", e.target.value)
+                    }
+                    className="font-medium text-gray-900 bg-transparent border-none outline-none flex-1 text-lg"
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => duplicateExercise(exercise.id)}
+                      className="text-blue-600 hover:text-blue-800 p-3 sm:p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Copy className="w-5 h-5 sm:w-4 sm:h-4" />
+                    </button>
+                    <button
+                      onClick={() => removeExercise(exercise.id)}
+                      className="text-red-600 hover:text-red-800 p-3 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remove exercise"
+                    >
+                      <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                    </button>
+                  </div>
+                </div>
 
-      <div className="flex gap-1">
-        <div className="flex-1 space-y-2 flex flex-col items-center">
-          <label className="text-sm text-gray-600 block text-center">Sets</label>
-          <div className="flex items-center justify-center space-x-1 w-full">
-            <button
-              onClick={() => adjustValue(exercise.id, "sets", -1)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              -
-            </button>
+                <div className="flex gap-1">
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Sets
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "sets", -1)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        -
+                      </button>
 
-            <input
-              type="number"
-              value={exercise.sets}
-              onChange={(e) =>
-                updateExercise(
-                  exercise.id,
-                  "sets",
-                  parseInt(e.target.value) || 1
-                )
-              }
-              className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={() => adjustValue(exercise.id, "sets", 1)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              +
-            </button>
+                      <input
+                        type="number"
+                        value={exercise.sets}
+                        onChange={(e) =>
+                          updateExercise(
+                            exercise.id,
+                            "sets",
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={() => adjustValue(exercise.id, "sets", 1)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Reps
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "reps", -1)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={exercise.reps}
+                        onChange={(e) =>
+                          updateExercise(
+                            exercise.id,
+                            "reps",
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={() => adjustValue(exercise.id, "reps", 1)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Weight
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "weight", -5)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={convertWeight(exercise.weight)}
+                        onChange={(e) => {
+                          const inputValue = parseFloat(e.target.value) || 0;
+                          const actualWeight = useKg
+                            ? inputValue * 2.205
+                            : inputValue;
+                          updateExercise(exercise.id, "weight", actualWeight);
+                        }}
+                        className="w-16 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        step={useKg ? "0.1" : "0.5"}
+                      />
+                      <button
+                        onClick={() => adjustValue(exercise.id, "weight", 5)}
+                        className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className="flex-1 space-y-2 flex flex-col items-center">
-          <label className="text-sm text-gray-600 block text-center">Reps</label>
-          <div className="flex items-center justify-center space-x-1 w-full">
-            <button
-              onClick={() => adjustValue(exercise.id, "reps", -1)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              -
-            </button>
-            <input
-              type="number"
-              value={exercise.reps}
-              onChange={(e) =>
-                updateExercise(
-                  exercise.id,
-                  "reps",
-                  parseInt(e.target.value) || 1
-                )
-              }
-              className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={() => adjustValue(exercise.id, "reps", 1)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        <div className="flex-1 space-y-2 flex flex-col items-center">
-          <label className="text-sm text-gray-600 block text-center">
-            Weight
-          </label>
-          <div className="flex items-center justify-center space-x-1 w-full">
-            <button
-              onClick={() => adjustValue(exercise.id, "weight", -5)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              -
-            </button>
-            <input
-              type="number"
-              value={convertWeight(exercise.weight)}
-              onChange={(e) => {
-                const inputValue = parseFloat(e.target.value) || 0;
-                const actualWeight = useKg
-                  ? inputValue * 2.205
-                  : inputValue;
-                updateExercise(exercise.id, "weight", actualWeight);
-              }}
-              className="w-16 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              step={useKg ? "0.1" : "0.5"}
-            />
-            <button
-              onClick={() => adjustValue(exercise.id, "weight", 5)}
-              className="w-8 h-10 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
-
-
-
 
           <div className="space-y-4  px-6">
             <button
@@ -1711,7 +1701,9 @@ className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounde
                 <p className="text-green-800 font-medium">
                   Congrats! You tracked your first workout.
                 </p>
-                <p className="text-green-700 text-sm">You unlocked all the templates.</p>
+                <p className="text-green-700 text-sm">
+                  You unlocked all the templates.
+                </p>
               </div>
             </div>
           </div>
