@@ -1567,7 +1567,7 @@ const WorkoutTracker = () => {
                     <div className="flex items-center justify-center space-x-1 w-full">
                       <button
                         onClick={() => adjustValue(exercise.id, "sets", -1)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         -
                       </button>
@@ -1586,7 +1586,7 @@ const WorkoutTracker = () => {
                       />
                       <button
                         onClick={() => adjustValue(exercise.id, "sets", 1)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         +
                       </button>
@@ -1600,7 +1600,7 @@ const WorkoutTracker = () => {
                     <div className="flex items-center justify-center space-x-1 w-full">
                       <button
                         onClick={() => adjustValue(exercise.id, "reps", -1)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         -
                       </button>
@@ -1618,7 +1618,7 @@ const WorkoutTracker = () => {
                       />
                       <button
                         onClick={() => adjustValue(exercise.id, "reps", 1)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         +
                       </button>
@@ -1632,7 +1632,7 @@ const WorkoutTracker = () => {
                     <div className="flex items-center justify-center space-x-1 w-full">
                       <button
                         onClick={() => adjustValue(exercise.id, "weight", -5)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         -
                       </button>
@@ -1651,7 +1651,7 @@ const WorkoutTracker = () => {
                       />
                       <button
                         onClick={() => adjustValue(exercise.id, "weight", 5)}
-                        className="w-8 h-8 min-h-[2rem] max-h-[2rem] bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-semibold text-sm"
+                        className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-sm leading-none"
                       >
                         +
                       </button>
