@@ -1363,13 +1363,13 @@ const WorkoutTracker = () => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
                 <h3 className="text-lg font-semibold mb-4">
-                  Save New Template
+                  New Template
                 </h3>
                 <input
                   type="text"
                   value={newTemplateName}
                   onChange={(e) => setNewTemplateName(e.target.value)}
-                  placeholder="Template name"
+                  placeholder="Name"
                   className="w-full p-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="flex space-x-3">
@@ -1378,15 +1378,15 @@ const WorkoutTracker = () => {
                     disabled={!newTemplateName.trim()}
                     className={`flex-1 py-3 px-4 rounded-xl font-medium transition-colors ${
                       newTemplateName.trim()
-                        ? "bg-purple-600 text-white hover:bg-purple-700"
-                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        ? "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100"
+                        : "bg-gray-200 text-gray-300 cursor-not-allowed"
                     }`}
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setShowSaveTemplate(false)}
-                    className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-600 transition-colors"
+className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
                   >
                     Cancel
                   </button>
