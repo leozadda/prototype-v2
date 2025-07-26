@@ -177,6 +177,8 @@ const WorkoutTracker = () => {
   const [displayTemplates, setDisplayTemplates] = useState({});
   const [refreshDisplayTemplates, setRefreshDisplayTemplates] = useState(0);
   const [progressInsights, setProgressInsights] = useState(null);
+  const [streakNotification, setStreakNotification] = useState(null);
+  const [useKg, setUseKg] = useState(false);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -482,22 +484,15 @@ const WorkoutTracker = () => {
           savedTemplates,
           savedPinnedTemplates,
           savedIsFirstTime,
+          savedUseKg, // Add this line
         ] = await Promise.all([
           database.getAllWorkouts(),
           database.getAllTemplates(),
           database.getSetting("pinnedTemplates"),
           database.getSetting("isFirstTime"),
+          database.getSetting("useKg"), // Add this line
         ]);
 
-        // Temporary debug - add this right after the Promise.all
-        console.log("Debug - savedIsFirstTime:", savedIsFirstTime);
-        console.log("Debug - savedTemplates:", Object.keys(savedTemplates));
-        console.log(
-          "Debug - savedWorkouts with beginner:",
-          (savedWorkouts || []).filter((w) => w.type === "beginner").length
-        );
-
-        // Auto-remove beginner template if user is no longer first-time
         // Auto-remove beginner template if user is no longer first-time
         if (savedIsFirstTime === false) {
           // Remove from templates
@@ -541,6 +536,7 @@ const WorkoutTracker = () => {
 
         setPinnedTemplates(savedPinnedTemplates || []);
         setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
+        setUseKg(savedUseKg || false);
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error);
         // Fallback to in-memory state
@@ -611,8 +607,22 @@ const WorkoutTracker = () => {
   }, [templates, db, isLoading, refreshDisplayTemplates]);
 
   useEffect(() => {
+    if (!db || isLoading) return;
+
+    const saveUseKg = async () => {
+      try {
+        await db.saveSetting("useKg", useKg);
+      } catch (error) {
+        console.error("Failed to save useKg setting:", error);
+      }
+    };
+
+    saveUseKg();
+  }, [useKg, db, isLoading]);
+
+  useEffect(() => {
     if (workouts.length > 0) {
-      const insights = getProgressInsights(workouts);
+      const insights = getProgressInsights(workouts, useKg, convertWeight);
       if (insights?.primaryIssue && workouts.length > 0) {
         // Find the most recent workout that contains this exercise to determine the template
         const exerciseName = insights.primaryIssue.exerciseName;
@@ -1111,6 +1121,18 @@ const WorkoutTracker = () => {
 
     const streakData = getStreakData();
 
+    // Check for streak notifications after completing workout
+    if (streakData.streak + 1 > 1) {
+      // They just extended their streak
+      setStreakNotification({
+        type: "active",
+        streak: streakData.streak + 1,
+        message: `Amazing! ${
+          streakData.streak + 1
+        } days in a row! Don't forget to work out tomorrow or you'll lose your streak.`,
+      });
+    }
+
     setWorkoutResult({
       streak: streakData.streak + 1,
       logDuration,
@@ -1130,6 +1152,14 @@ const WorkoutTracker = () => {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const convertWeight = (weight) => {
+    return useKg ? Math.round(weight / 2.205) : weight;
+  };
+
+  const getWeightUnit = () => {
+    return useKg ? "kg" : "lbs";
+  };
+
   const resetApp = () => {
     setCurrentWorkout(null);
     setShowResult(false);
@@ -1137,6 +1167,7 @@ const WorkoutTracker = () => {
     setShowHistory(false);
     setShowSaveTemplate(false);
     setCompletedWorkoutData(null);
+    setStreakNotification(null); // Add this line
   };
 
   const formatDate = (dateString) => {
@@ -1211,9 +1242,7 @@ const WorkoutTracker = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto p-6">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Workout History
-            </h1>
+            <h1 className="text-2xl font-semibold text-gray-900">History</h1>
             <button
               onClick={() => setShowHistory(false)}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1242,7 +1271,17 @@ const WorkoutTracker = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900">
-                        {workout.volume.toLocaleString()} lbs
+                        {useKg
+                          ? Math.round(
+                              workout.exercises.reduce(
+                                (total, ex) =>
+                                  total +
+                                  ex.sets * ex.reps * convertWeight(ex.weight),
+                                0
+                              )
+                            ).toLocaleString()
+                          : workout.volume.toLocaleString()}{" "}
+                        {getWeightUnit()}
                       </p>
                       <p className="text-xs text-gray-500">
                         {workout.exercises.length} exercises
@@ -1258,8 +1297,9 @@ const WorkoutTracker = () => {
                       >
                         <span>{exercise.name}</span>
                         <span className="font-mono">
-                          {exercise.sets} × {exercise.reps} @ {exercise.weight}
-                          lbs
+                          {exercise.sets} × {exercise.reps} @{" "}
+                          {convertWeight(exercise.weight)}
+                          {getWeightUnit()}
                         </span>
                       </div>
                     ))}
@@ -1270,7 +1310,7 @@ const WorkoutTracker = () => {
             {workouts.length === 0 && (
               <div className="text-center py-16">
                 <div className="text-4xl mb-4">📊</div>
-                <p className="text-gray-500">No workouts logged yet</p>
+                <p className="text-gray-500">No workouts</p>
               </div>
             )}
           </div>
@@ -1287,34 +1327,34 @@ const WorkoutTracker = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-6">
           <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
-            <div className="text-6xl">🔥</div>
+            {/* Add this in the Results View after the existing streak congratulations */}
 
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {streak === 1 ? "Great start!" : `${streak} days in a row!`}
-              </h2>
-              <p className="text-gray-600">
-                {streak >= 7
-                  ? "You're crushing it with consistency! 🏆"
-                  : streak >= 3
-                  ? "Building a solid habit! Keep going! 💪"
-                  : "Every workout counts. Stay consistent!"}
-              </p>
-            </div>
+            {streakNotification && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer">
+                <div className="text-5xl mb-2">🔥</div>
+                <p className="text-blue-800 font-medium text-lg">
+                  {streakNotification.streak} Day Streak!
+                </p>
+                <p className="text-blue-600 text-sm font-light">
+                  Don't lose your momentum. Get after it tomorrow — quitters
+                  never win.
+                </p>
+              </div>
+            )}
 
-            <div className="space-y-3">
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowSaveTemplate(true)}
-                className="w-full bg-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium "
               >
-                Save as Template
+                Add
               </button>
 
               <button
                 onClick={resetApp}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium"
               >
-                Log Another Workout
+                Exit
               </button>
             </div>
           </div>
@@ -1368,12 +1408,24 @@ const WorkoutTracker = () => {
             <h1 className="text-2xl font-semibold text-gray-900">
               {currentWorkout.templateName}
             </h1>
-            <div className="flex items-center text-gray-600 bg-white px-3 py-2 rounded-lg border">
-              <Clock className="w-4 h-4 mr-2" />
-              <span className="font-mono">
-                {formatTime(Math.floor((Date.now() - startTime) / 1000))}
+            <button
+              onClick={() => setUseKg(!useKg)}
+              className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${
+                useKg ? "bg-gray-400" : "bg-gray-900"
+              }`}
+            >
+              <span className="absolute left-2 text-xs font-medium text-white">
+                kg
               </span>
-            </div>
+              <span className="absolute right-2 text-xs font-medium text-white">
+                lbs
+              </span>
+              <span
+                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-sm ${
+                  useKg ? "translate-x-8" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
 
           <div className="space-y-4 mb-8">
@@ -1483,16 +1535,16 @@ const WorkoutTracker = () => {
                       </button>
                       <input
                         type="number"
-                        value={exercise.weight}
-                        onChange={(e) =>
-                          updateExercise(
-                            exercise.id,
-                            "weight",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
+                        value={convertWeight(exercise.weight)}
+                        onChange={(e) => {
+                          const inputValue = parseFloat(e.target.value) || 0;
+                          const actualWeight = useKg
+                            ? inputValue * 2.205
+                            : inputValue;
+                          updateExercise(exercise.id, "weight", actualWeight);
+                        }}
                         className="w-16 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        step="0.5"
+                        step={useKg ? "0.1" : "0.5"}
                       />
                       <button
                         onClick={() => adjustValue(exercise.id, "weight", 5)}
@@ -1516,18 +1568,19 @@ const WorkoutTracker = () => {
               Add Exercise
             </button>
 
-            <div className="flex space-x-3">
+            <div className="flex gap-3">
               <button
                 onClick={() => setCurrentWorkout(null)}
-                className="flex-1 bg-gray-500 text-white py-3 px-4 rounded-xl font-medium hover:bg-gray-600 transition-colors"
+                className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </button>
+
               <button
                 onClick={finishWorkout}
-                className="flex-1 bg-green-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
               >
-                Finish Workout
+                Finish
               </button>
             </div>
           </div>
@@ -1644,47 +1697,53 @@ const WorkoutTracker = () => {
               <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
               <div>
                 <p className="text-green-800 font-medium">
-                  Congrats! You just proved you can track workouts.
+                  Congrats! You tracked your first workout.
                 </p>
-                <p className="text-green-700 text-sm">Here's the full app.</p>
+                <p className="text-green-700 text-sm">You unlocked all the templates.</p>
               </div>
             </div>
           </div>
         )}
-{/* Progress Insights */}
-{progressInsights?.hasIssues && (
-  <div className="mb-6 p-4 bg-blue-50 border border-blue-400 rounded-xl">
-    <div className="flex items-start">
-      <div className="text-2xl mr-3">💡</div>
-      <div className="flex-1">
-        <h3 className="font-medium text-blue-900 mb-1">
-          {progressInsights.primaryIssue.exerciseName} -{" "}
-          {progressInsights.primaryIssue.pattern}
-        </h3>
-        <p className="text-blue-800 text-sm mb-2">
-          {progressInsights.primaryIssue.message}
-        </p>
-        <p className="text-blue-700 text-sm font-medium mb-3">
-          💪 {progressInsights.primaryIssue.suggestion}
-        </p>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleProgressSuggestion("accept")}
-            className="border border-blue-400 bg-grey-100 text-blue-700 px-2 py-1 rounded-xl text-xs font-xs hover:bg-blue-100 transition-colors"
-          >
-            <Check/>
-          </button>
-          <button
-            onClick={() => handleProgressSuggestion("reject")}
-            className="border border-blue-400 bg-grey-100 text-blue-700 px-2 py-1 rounded-xl text-xs font-xs hover:bg-blue-100 transition-colors"
-          >
-            <X/>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+
+        {/* Progress Insights */}
+        {progressInsights?.hasIssues && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-400 rounded-xl">
+            <div className="flex items-start">
+              <div className="text-2xl mr-3">💡</div>
+              <div className="flex-1">
+                <h3 className="font-medium text-blue-900 mb-1">
+                  {progressInsights.primaryIssue.exerciseName} -{" "}
+                  {progressInsights.primaryIssue.pattern}
+                </h3>
+                <p className="text-blue-700 text-sm font-light mb-3">
+                  💪{progressInsights.primaryIssue.message}{" "}
+                  {progressInsights.primaryIssue.suggestion.replace(
+                    /(\d+(?:\.\d+)?)\s*lbs?/g,
+                    (match, weight) => {
+                      const numWeight = parseFloat(weight);
+                      return `${convertWeight(numWeight)}${getWeightUnit()}`;
+                    }
+                  )}
+                  ?
+                </p>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleProgressSuggestion("accept")}
+                    className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleProgressSuggestion("reject")}
+                    className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-4">
           {sortedTemplates.map(([templateKey, template]) => {
@@ -1739,7 +1798,8 @@ const WorkoutTracker = () => {
                             <span>{exercise.name}</span>
                             <span className="font-mono text-xs text-gray-500">
                               {exercise.sets} × {exercise.reps} @{" "}
-                              {exercise.weight}lbs
+                              {convertWeight(exercise.weight)}
+                              {getWeightUnit()}
                             </span>
                           </div>
                         ))}
