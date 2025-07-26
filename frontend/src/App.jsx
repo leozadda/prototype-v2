@@ -179,6 +179,7 @@ const WorkoutTracker = () => {
   const [progressInsights, setProgressInsights] = useState(null);
   const [streakNotification, setStreakNotification] = useState(null);
   const [useKg, setUseKg] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState(null);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -1057,6 +1058,20 @@ const WorkoutTracker = () => {
     }
   };
 
+  const deleteWorkout = async (workoutId) => {
+    // Remove from state
+    setWorkouts((prev) => prev.filter((workout) => workout.id !== workoutId));
+
+    // Remove from IndexedDB
+    if (db) {
+      try {
+        await db.deleteWorkout(workoutId);
+      } catch (error) {
+        console.error("Failed to delete workout from IndexedDB:", error);
+      }
+    }
+  };
+
   const togglePinTemplate = (templateKey) => {
     setPinnedTemplates((prev) => {
       if (prev.includes(templateKey)) {
@@ -1260,7 +1275,7 @@ const WorkoutTracker = () => {
                   key={index}
                   className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-sm transition-shadow"
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-4 group">
                     <div>
                       <h3 className="font-medium text-gray-900">
                         {workout.templateName}
@@ -1269,23 +1284,37 @@ const WorkoutTracker = () => {
                         {formatDate(workout.date)}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">
-                        {useKg
-                          ? Math.round(
-                              workout.exercises.reduce(
-                                (total, ex) =>
-                                  total +
-                                  ex.sets * ex.reps * convertWeight(ex.weight),
-                                0
-                              )
-                            ).toLocaleString()
-                          : workout.volume.toLocaleString()}{" "}
-                        {getWeightUnit()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {workout.exercises.length} exercises
-                      </p>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">
+                          {useKg
+                            ? Math.round(
+                                workout.exercises.reduce(
+                                  (total, ex) =>
+                                    total +
+                                    ex.sets *
+                                      ex.reps *
+                                      convertWeight(ex.weight),
+                                  0
+                                )
+                              ).toLocaleString()
+                            : workout.volume.toLocaleString()}{" "}
+                          {getWeightUnit()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {workout.exercises.length} exercises
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirmation(workout.id);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete workout"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
@@ -1314,6 +1343,34 @@ const WorkoutTracker = () => {
               </div>
             )}
           </div>
+
+          {deleteConfirmation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure? It will be gone forever.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      deleteWorkout(deleteConfirmation);
+                      setDeleteConfirmation(null);
+                    }}
+                    className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirmation(null)}
+                    className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
