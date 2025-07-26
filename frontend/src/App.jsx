@@ -1559,108 +1559,126 @@ const WorkoutTracker = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-1">
-                  <div className="flex-1 space-y-2 flex flex-col items-center">
-                    <label className="text-sm text-gray-600 block text-center">
-                      Sets
-                    </label>
-                    <div className="flex items-center justify-center space-x-1 w-full">
-                      <button
-                        onClick={() => adjustValue(exercise.id, "sets", -1)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        -
-                      </button>
 
-                      <input
-                        type="number"
-                        value={exercise.sets}
-                        onChange={(e) =>
-                          updateExercise(
-                            exercise.id,
-                            "sets",
-                            parseInt(e.target.value) || 1
-                          )
-                        }
-                        className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={() => adjustValue(exercise.id, "sets", 1)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex-1 space-y-2 flex flex-col items-center">
-                    <label className="text-sm text-gray-600 block text-center">
-                      Reps
-                    </label>
-                    <div className="flex items-center justify-center space-x-1 w-full">
-                      <button
-                        onClick={() => adjustValue(exercise.id, "reps", -1)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={exercise.reps}
-                        onChange={(e) =>
-                          updateExercise(
-                            exercise.id,
-                            "reps",
-                            parseInt(e.target.value) || 1
-                          )
-                        }
-                        className="w-12 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={() => adjustValue(exercise.id, "reps", 1)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
 
-                  <div className="flex-1 space-y-2 flex flex-col items-center">
-                    <label className="text-sm text-gray-600 block text-center">
-                      Weight
-                    </label>
-                    <div className="flex items-center justify-center space-x-1 w-full">
-                      <button
-                        onClick={() => adjustValue(exercise.id, "weight", -5)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        value={convertWeight(exercise.weight)}
-                        onChange={(e) => {
-                          const inputValue = parseFloat(e.target.value) || 0;
-                          const actualWeight = useKg
-                            ? inputValue * 2.205
-                            : inputValue;
-                          updateExercise(exercise.id, "weight", actualWeight);
-                        }}
-                        className="w-16 text-center py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        step={useKg ? "0.1" : "0.5"}
-                      />
-                      <button
-                        onClick={() => adjustValue(exercise.id, "weight", 5)}
-                        className="w-7 h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
+
+
+
+                <div className="flex gap-1 sm:gap-2">
+  <div className="flex-1 space-y-2 flex flex-col items-center">
+    <label className="text-sm text-gray-600 block text-center">
+      Sets
+    </label>
+    <div className="flex items-center justify-center space-x-1 w-full">
+      <button
+        onClick={() => adjustValue(exercise.id, "sets", -1)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        -
+      </button>
+
+      <input
+        type="number"
+        value={exercise.sets}
+        onChange={(e) =>
+          updateExercise(
+            exercise.id,
+            "sets",
+            parseInt(e.target.value) || 1
+          )
+        }
+        className="w-10 sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+      />
+      <button
+        onClick={() => adjustValue(exercise.id, "sets", 1)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        +
+      </button>
+    </div>
+  </div>
+
+  <div className="flex-1 space-y-2 flex flex-col items-center">
+    <label className="text-sm text-gray-600 block text-center">
+      Reps
+    </label>
+    <div className="flex items-center justify-center space-x-1 w-full">
+      <button
+        onClick={() => adjustValue(exercise.id, "reps", -1)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        -
+      </button>
+      <input
+        type="number"
+        value={exercise.reps}
+        onChange={(e) =>
+          updateExercise(
+            exercise.id,
+            "reps",
+            parseInt(e.target.value) || 1
+          )
+        }
+        className="w-10 sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+      />
+      <button
+        onClick={() => adjustValue(exercise.id, "reps", 1)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        +
+      </button>
+    </div>
+  </div>
+
+  <div className="flex-1 space-y-2 flex flex-col items-center">
+    <label className="text-sm text-gray-600 block text-center">
+      Weight
+    </label>
+    <div className="flex items-center justify-center space-x-1 w-full">
+      <button
+        onClick={() => adjustValue(exercise.id, "weight", -5)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        -
+      </button>
+      <input
+        type="number"
+        value={convertWeight(exercise.weight)}
+        onChange={(e) => {
+          const inputValue = parseFloat(e.target.value) || 0;
+          const actualWeight = useKg
+            ? inputValue * 2.205
+            : inputValue;
+          updateExercise(exercise.id, "weight", actualWeight);
+        }}
+        className="w-12 sm:w-16 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        step={useKg ? "0.1" : "0.5"}
+      />
+      <button
+        onClick={() => adjustValue(exercise.id, "weight", 5)}
+        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+      >
+        +
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
               </div>
             ))}
           </div>
+
+
+
+
+          
 
           <div className="space-y-4  px-6">
             <button
