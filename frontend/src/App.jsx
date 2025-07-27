@@ -489,8 +489,6 @@ const WorkoutTracker = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const hasSuccessParam = urlParams.get("success") === "true";
 
-        console.log("URL success parameter:", hasSuccessParam); // Debug log
-
         // Load data from IndexedDB
         const [
           savedWorkouts,
@@ -521,9 +519,6 @@ const WorkoutTracker = () => {
 
         // Handle subscription status - URL parameter takes absolute priority
         if (hasSuccessParam) {
-          console.log(
-            "Success parameter detected - setting subscribed to true"
-          );
           setIsSubscribed(true);
           setShowPaywall(false);
           await database.saveSetting("isSubscribed", true);
@@ -536,7 +531,7 @@ const WorkoutTracker = () => {
         } else {
           // Use saved subscription status
           const subscriptionStatus = savedIsSubscribed || false;
-          console.log("Using saved subscription status:", subscriptionStatus);
+
           setIsSubscribed(subscriptionStatus);
         }
 
@@ -671,7 +666,7 @@ const WorkoutTracker = () => {
       if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
         setShowPaywall(true);
       }
-    }, 5000); // Change from 60000 (1 minute) to 1000 (1 second) for faster testing
+    }, 60000 * 60);
 
     return () => clearInterval(interval);
   }, [firstLoginDate, isSubscribed, showPaywall]);
@@ -824,15 +819,7 @@ const WorkoutTracker = () => {
 
   // Find this function in your code:
   const checkTrialStatus = () => {
-    console.log(
-      "checkTrialStatus called - isSubscribed:",
-      isSubscribed,
-      "firstLoginDate:",
-      firstLoginDate
-    );
-
     if (isSubscribed || !firstLoginDate) {
-      console.log("Trial check: returning true (subscribed or no first login)");
       return true;
     }
 
@@ -840,10 +827,7 @@ const WorkoutTracker = () => {
     const now = new Date();
     const secondsPassed = (now - trialStart) / 1000;
 
-    console.log("Trial check: seconds passed:", secondsPassed);
-    // Use 30 seconds for testing, change to longer period for production
-    const isStillInTrial = secondsPassed <= 30; // Increased from 5 to 30 seconds for easier testing
-    console.log("Trial check: still in trial?", isStillInTrial);
+    const isStillInTrial = secondsPassed <= 5 * 24 * 60 * 60; // 5 days in seconds
 
     return isStillInTrial;
   };
@@ -1431,7 +1415,6 @@ const WorkoutTracker = () => {
     process.env.NODE_ENV === "development" && (
       <button
         onClick={() => {
-          console.log("Manual success test triggered");
           setIsSubscribed(true);
           setShowPaywall(false);
           if (db) {
@@ -2022,7 +2005,6 @@ const WorkoutTracker = () => {
 
   // Trial and paywall check
   if (!checkTrialStatus() && !showPaywall) {
-    console.log("Setting paywall to true");
     setShowPaywall(true);
   }
 
