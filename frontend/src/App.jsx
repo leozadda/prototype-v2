@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { detectAdvancedStagnation } from "./algo/detectAdvancedStagnation";
 import { getProgressInsights } from "./algo/detectAdvancedStagnation";
+import SimplePaywall from "./component/SimplePaywall";
 import {
   Plus,
   Trash2,
@@ -2026,33 +2027,7 @@ const WorkoutTracker = () => {
   }
 
   if (showPaywall) {
-    console.log(
-      "Showing paywall - isSubscribed:",
-      isSubscribed,
-      "showPaywall:",
-      showPaywall
-    );
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6">
-          <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
-            <div className="text-4xl mb-4">⏰</div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Free trial over!
-            </h2>
-            <p className="text-gray-600">
-              Subscribe for $5/month to continue tracking your workouts.
-            </p>
-            <a
-              href="https://buy.stripe.com/fZu14n3JNdJffCs8d6efC02"
-              className="block w-auto bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
-            >
-              Subscribe
-            </a>
-          </div>
-        </div>
-      </div>
-    );
+    return <SimplePaywall />;
   }
 
   return (
