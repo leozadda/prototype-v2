@@ -487,56 +487,60 @@ const WorkoutTracker = () => {
           savedTemplates,
           savedPinnedTemplates,
           savedIsFirstTime,
-          savedUseKg, // Add this line
+          savedUseKg,
         ] = await Promise.all([
           database.getAllWorkouts(),
           database.getAllTemplates(),
           database.getSetting("pinnedTemplates"),
           database.getSetting("isFirstTime"),
-          database.getSetting("useKg"), // Add this line
+          database.getSetting("useKg"),
         ]);
 
-        // Auto-remove beginner template if user is no longer first-time
+        // Clean up Example workouts if user is no longer first-time
         if (savedIsFirstTime === false) {
-          // Remove from templates
-          if (savedTemplates.beginner) {
-            delete savedTemplates.beginner;
-            await database.deleteTemplate("beginner");
-          }
-
-          // Remove from workout history
           // Remove Example workouts from database and current state
-          const exampleWorkouts = workouts.filter(
+          const exampleWorkouts = (savedWorkouts || []).filter(
             (w) => w.templateName === "Example"
           );
-          if (exampleWorkouts.length > 0 && db) {
+          if (exampleWorkouts.length > 0) {
             exampleWorkouts.forEach(async (workout) => {
               try {
-                await db.deleteWorkout(workout.id);
+                await database.deleteWorkout(workout.id);
               } catch (error) {
                 console.error("Failed to delete Example workout:", error);
               }
             });
           }
 
-          // Remove from current state immediately
-          setWorkouts((prev) =>
-            prev.filter((w) => w.templateName !== "Example")
+          // Filter out Example workouts from loaded workouts
+          const filteredWorkouts = (savedWorkouts || []).filter(
+            (w) => w.templateName !== "Example"
           );
+          setWorkouts(filteredWorkouts);
+        } else {
+          setWorkouts(savedWorkouts || []);
         }
 
-        setWorkouts(savedWorkouts || []);
+        // Initialize templates - preserve saved templates, only use defaults if none exist
+        let initialTemplates;
+        if (Object.keys(savedTemplates || {}).length > 0) {
+          // User has saved templates, use them
+          initialTemplates = savedTemplates;
 
-        // Initialize templates - show all templates but lock non-beginner ones for first-time users
-        const initialTemplates =
-          Object.keys(savedTemplates).length > 0
-            ? savedTemplates
-            : savedIsFirstTime === false
-            ? realTemplates
-            : { beginner: beginnerTemplate, ...realTemplates };
+          // Remove beginner template from saved templates if user is no longer first-time
+          if (savedIsFirstTime === false && initialTemplates.beginner) {
+            delete initialTemplates.beginner;
+            await database.deleteTemplate("beginner");
+          }
+        } else {
+          // No saved templates, initialize with defaults based on first-time status
+          initialTemplates =
+            savedIsFirstTime === false
+              ? realTemplates
+              : { beginner: beginnerTemplate, ...realTemplates };
+        }
 
         setTemplates(initialTemplates);
-
         setPinnedTemplates(savedPinnedTemplates || []);
         setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
         setUseKg(savedUseKg || false);
