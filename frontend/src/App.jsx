@@ -656,7 +656,9 @@ const WorkoutTracker = () => {
 
   const getStreakData = () => {
     const today = new Date().toDateString();
-    const workoutDates = workouts.map((w) => new Date(w.date).toDateString());
+    const workoutDates = workouts
+      .filter((w) => w.volume > 0) // Only count workouts with actual volume
+      .map((w) => new Date(w.date).toDateString());
 
     let streak = 0;
     let currentDate = new Date();
@@ -1167,7 +1169,12 @@ const WorkoutTracker = () => {
     }
 
     // If this was the first workout (beginner template), unlock real templates
-    if (isFirstTime && currentWorkout.type === "beginner") {
+    // But only if they actually entered some data
+    if (
+      isFirstTime &&
+      currentWorkout.type === "beginner" &&
+      currentVolume > 0
+    ) {
       unlockRealTemplates();
     }
 
@@ -1443,6 +1450,19 @@ const WorkoutTracker = () => {
                 </p>
               </div>
             )}
+
+            {/* Check if workout had any actual data */}
+            {workoutResult &&
+              calculateVolume(completedWorkoutData?.exercises || []) === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-center">
+                  <div className="text-4xl mb-2">🤔</div>
+                  <p className="text-yellow-800 font-medium">No data entered</p>
+                  <p className="text-yellow-600 text-sm">
+                    Looks like you didn't log any sets, reps, or weight. Try
+                    again!
+                  </p>
+                </div>
+              )}
 
             <div className="flex gap-3">
               <button
