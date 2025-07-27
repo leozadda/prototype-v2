@@ -181,6 +181,7 @@ const WorkoutTracker = () => {
   const [streakNotification, setStreakNotification] = useState(null);
   const [useKg, setUseKg] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+  const [inputValues, setInputValues] = useState({});
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -1559,126 +1560,172 @@ const WorkoutTracker = () => {
                   </div>
                 </div>
 
-
-
-
-
-
-
                 <div className="flex gap-1 sm:gap-2">
-  <div className="flex-1 space-y-2 flex flex-col items-center">
-    <label className="text-sm text-gray-600 block text-center">
-      Sets
-    </label>
-    <div className="flex items-center justify-center space-x-1 w-full">
-      <button
-        onClick={() => adjustValue(exercise.id, "sets", -1)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        -
-      </button>
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Sets
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "sets", -1)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        -
+                      </button>
 
-      <input
-        type="number"
-        value={exercise.sets}
-        onChange={(e) =>
-          updateExercise(
-            exercise.id,
-            "sets",
-            parseInt(e.target.value) || 1
-          )
-        }
-        className="w-10 sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-      />
-      <button
-        onClick={() => adjustValue(exercise.id, "sets", 1)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        +
-      </button>
-    </div>
-  </div>
+                      <input
+                        type="number"
+                        value={
+                          inputValues[`${exercise.id}_sets`] ?? exercise.sets
+                        }
+                        onChange={(e) => {
+                          const rawValue = e.target.value;
+                          setInputValues((prev) => ({
+                            ...prev,
+                            [`${exercise.id}_sets`]: rawValue,
+                          }));
 
-  <div className="flex-1 space-y-2 flex flex-col items-center">
-    <label className="text-sm text-gray-600 block text-center">
-      Reps
-    </label>
-    <div className="flex items-center justify-center space-x-1 w-full">
-      <button
-        onClick={() => adjustValue(exercise.id, "reps", -1)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        -
-      </button>
-      <input
-        type="number"
-        value={exercise.reps}
-        onChange={(e) =>
-          updateExercise(
-            exercise.id,
-            "reps",
-            parseInt(e.target.value) || 1
-          )
-        }
-        className="w-10 sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-      />
-      <button
-        onClick={() => adjustValue(exercise.id, "reps", 1)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        +
-      </button>
-    </div>
-  </div>
+                          if (rawValue === "") {
+                            updateExercise(exercise.id, "sets", 1);
+                            return;
+                          }
 
-  <div className="flex-1 space-y-2 flex flex-col items-center">
-    <label className="text-sm text-gray-600 block text-center">
-      Weight
-    </label>
-    <div className="flex items-center justify-center space-x-1 w-full">
-      <button
-        onClick={() => adjustValue(exercise.id, "weight", -5)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        -
-      </button>
-      <input
-        type="number"
-        value={convertWeight(exercise.weight)}
-        onChange={(e) => {
-          const inputValue = parseFloat(e.target.value) || 0;
-          const actualWeight = useKg
-            ? inputValue * 2.205
-            : inputValue;
-          updateExercise(exercise.id, "weight", actualWeight);
-        }}
-        className="w-12 sm:w-16 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        step={useKg ? "0.1" : "0.5"}
-      />
-      <button
-        onClick={() => adjustValue(exercise.id, "weight", 5)}
-        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
-      >
-        +
-      </button>
-    </div>
-  </div>
-</div>
+                          updateExercise(
+                            exercise.id,
+                            "sets",
+                            Math.max(1, parseInt(rawValue))
+                          );
+                        }}
+                        onBlur={() => {
+                          setInputValues((prev) => {
+                            const newValues = { ...prev };
+                            delete newValues[`${exercise.id}_sets`];
+                            return newValues;
+                          });
+                        }}
+                        className="w-10 hide-arrows sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none  focus:ring-1 focus:ring-gray-400 text-sm"
+                      />
+                      <button
+                        onClick={() => adjustValue(exercise.id, "sets", 1)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
 
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Reps
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "reps", -1)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        value={
+                          inputValues[`${exercise.id}_reps`] ?? exercise.reps
+                        }
+                        onChange={(e) => {
+                          const rawValue = e.target.value;
+                          setInputValues((prev) => ({
+                            ...prev,
+                            [`${exercise.id}_reps`]: rawValue,
+                          }));
 
+                          if (rawValue === "") {
+                            updateExercise(exercise.id, "reps", 1);
+                            return;
+                          }
 
+                          updateExercise(
+                            exercise.id,
+                            "reps",
+                            Math.max(1, parseInt(rawValue))
+                          );
+                        }}
+                        onBlur={() => {
+                          setInputValues((prev) => {
+                            const newValues = { ...prev };
+                            delete newValues[`${exercise.id}_reps`];
+                            return newValues;
+                          });
+                        }}
+                        className="hide-arrows w-10 sm:w-12 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none  focus:ring-1 focus:ring-gray-400 text-sm"
+                      />
+                      <button
+                        onClick={() => adjustValue(exercise.id, "reps", 1)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
 
+                  <div className="flex-1 space-y-2 flex flex-col items-center">
+                    <label className="text-sm text-gray-600 block text-center">
+                      Weight
+                    </label>
+                    <div className="flex items-center justify-center space-x-1 w-full">
+                      <button
+                        onClick={() => adjustValue(exercise.id, "weight", -5)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        -
+                      </button>
 
+                      <input
+                        type="number"
+                        value={
+                          inputValues[`${exercise.id}_weight`] ??
+                          convertWeight(exercise.weight)
+                        }
+                        onChange={(e) => {
+                          const rawValue = e.target.value;
+                          setInputValues((prev) => ({
+                            ...prev,
+                            [`${exercise.id}_weight`]: rawValue,
+                          }));
 
+                          if (rawValue === "") {
+                            updateExercise(exercise.id, "weight", 0);
+                            return;
+                          }
 
+                          const inputValue = parseFloat(rawValue);
+                          const actualWeight = useKg
+                            ? inputValue * 2.205
+                            : inputValue;
+                          updateExercise(exercise.id, "weight", actualWeight);
+                        }}
+                        onBlur={() => {
+                          // Clean up the input value on blur to show the converted weight
+                          setInputValues((prev) => {
+                            const newValues = { ...prev };
+                            delete newValues[`${exercise.id}_weight`];
+                            return newValues;
+                          });
+                        }}
+                        className="w-12 hide-arrows sm:w-16 text-center py-1 sm:py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 text-sm"
+                        step={useKg ? "0.1" : "0.5"}
+                      />
+
+                      <button
+                        onClick={() => adjustValue(exercise.id, "weight", 5)}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-gray-100 rounded-md flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors font-medium text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-
-
-
-
-          
 
           <div className="space-y-4  px-6">
             <button
