@@ -651,8 +651,18 @@ const WorkoutTracker = () => {
     const { beginner, ...remainingTemplates } = templates;
     setTemplates({ ...remainingTemplates, ...realTemplates });
     setIsFirstTime(false);
+    
+    // Save the isFirstTime status to IndexedDB
+    if (db) {
+      try {
+        await db.saveSetting("isFirstTime", false);
+      } catch (error) {
+        console.error("Failed to save isFirstTime setting:", error);
+      }
+    }
+    
     setShowUnlockMessage(true);
-
+  
     setTimeout(() => {
       setShowUnlockMessage(false);
     }, 4000);
