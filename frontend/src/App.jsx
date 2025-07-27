@@ -656,7 +656,15 @@ const WorkoutTracker = () => {
 
   const getStreakData = () => {
     const today = new Date().toDateString();
-    const workoutDates = workouts
+    // Filter out deleted Example workouts from streak calculation
+    const validWorkouts = workouts.filter((w) => w.templateName !== "Example");
+
+    // If this is the first valid workout ever, return streak of 0
+    if (validWorkouts.length <= 1) {
+      return { streak: 0, lastWorkout: validWorkouts.length === 1 };
+    }
+
+    const workoutDates = validWorkouts
       .filter((w) => w.volume > 0) // Only count workouts with actual volume
       .map((w) => new Date(w.date).toDateString());
 
@@ -745,6 +753,7 @@ const WorkoutTracker = () => {
       exercises,
       date: new Date().toISOString().split("T")[0],
     });
+
     setStartTime(Date.now());
     setLogStartTime(Date.now());
     setShowResult(false);
@@ -1137,7 +1146,6 @@ const WorkoutTracker = () => {
     const endTime = Date.now();
     const logDuration = endTime - logStartTime;
     const currentVolume = calculateVolume(currentWorkout.exercises);
-
     // Save last used settings for this template
     if (db) {
       try {
@@ -1178,22 +1186,57 @@ const WorkoutTracker = () => {
       unlockRealTemplates();
     }
 
-    const streakData = getStreakData();
+    // Calculate streak AFTER adding the new workout
+    const updatedWorkouts = [...workouts, completedWorkout];
+    const newStreakData = (() => {
+      const today = new Date().toDateString();
+      const validWorkouts = updatedWorkouts.filter(
+        (w) => w.templateName !== "Example"
+      );
+
+      if (validWorkouts.length <= 1) {
+        return { streak: 0, lastWorkout: validWorkouts.length === 1 };
+      }
+
+      const workoutDates = validWorkouts
+        .filter((w) => w.volume > 0)
+        .map((w) => new Date(w.date).toDateString());
+
+      // Count unique days, not total workouts
+      const uniqueDays = [...new Set(workoutDates)];
+
+      let streak = 0;
+      let currentDate = new Date();
+
+      if (uniqueDays.includes(today)) {
+        streak = 1;
+        currentDate.setDate(currentDate.getDate() - 1);
+
+        while (true) {
+          const dateString = currentDate.toDateString();
+          if (uniqueDays.includes(dateString)) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+          } else {
+            break;
+          }
+        }
+      }
+
+      return { streak, lastWorkout: uniqueDays.includes(today) };
+    })();
 
     // Check for streak notifications after completing workout
-    if (streakData.streak + 1 > 1) {
-      // They just extended their streak
+    if (newStreakData.streak > 1) {
       setStreakNotification({
         type: "active",
-        streak: streakData.streak + 1,
-        message: `Amazing! ${
-          streakData.streak + 1
-        } days in a row! Don't forget to work out tomorrow or you'll lose your streak.`,
+        streak: newStreakData.streak,
+        message: `Amazing! ${newStreakData.streak} days in a row! Don't forget to work out tomorrow or you'll lose your streak.`,
       });
     }
 
     setWorkoutResult({
-      streak: streakData.streak + 1,
+      streak: newStreakData.streak,
       logDuration,
       volume: currentVolume,
     });
@@ -1438,19 +1481,6 @@ const WorkoutTracker = () => {
           <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
             {/* Add this in the Results View after the existing streak congratulations */}
 
-            {streakNotification && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer">
-                <div className="text-5xl mb-2">🔥</div>
-                <p className="text-blue-800 font-medium text-lg">
-                  {streakNotification.streak} Day Streak!
-                </p>
-                <p className="text-blue-600 text-sm font-light">
-                  Don't lose your momentum. Get after it tomorrow — quitters
-                  never win.
-                </p>
-              </div>
-            )}
-
             {/* Check if workout had any actual data */}
             {workoutResult &&
               calculateVolume(completedWorkoutData?.exercises || []) === 0 && (
@@ -1463,6 +1493,52 @@ const WorkoutTracker = () => {
                   </p>
                 </div>
               )}
+
+            {/* First workout completion message */}
+            {!isFirstTime && workouts.length === 1 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
+                <div className="text-4xl mb-2">🎉</div>
+                <p className="text-green-800 font-medium text-lg mb-2">
+                  First workout complete!
+                </p>
+                <p className="text-green-600 text-sm font-light">
+                  All templates unlocked. Work out tomorrow to start a streak!
+                </p>
+              </div>
+            )}
+
+            {/* Same day workout after demo completion - first real workout */}
+            {!isFirstTime &&
+              workouts.some((w) => w.templateName === "Example") &&
+              completedWorkoutData?.templateName !== "Example" &&
+              workouts.filter((w) => w.templateName !== "Example").length >=
+                1 &&
+              new Date(
+                workouts.find((w) => w.templateName === "Example")?.date
+              ).toDateString() === new Date().toDateString() && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
+                  <div className="text-4xl mb-2">🎯</div>
+                  <p className="text-blue-800 font-medium text-lg mb-2">
+                    Workout complete!
+                  </p>
+                  <p className="text-blue-600 text-sm font-light">
+                    Nice work! Come back tomorrow to start building a streak!
+                  </p>
+                </div>
+              )}
+
+            {streakNotification && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer">
+                <div className="text-5xl mb-2">🔥</div>
+                <p className="text-blue-800 font-medium text-lg">
+                  {streakNotification.streak} Day Streak!
+                </p>
+                <p className="text-blue-600 text-sm font-light">
+                  Don't lose your momentum. Get after it tomorrow — quitters
+                  never win.
+                </p>
+              </div>
+            )}
 
             <div className="flex gap-3">
               <button
