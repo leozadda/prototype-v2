@@ -158,6 +158,8 @@ class WorkoutDB {
   }
 }
 
+
+
 const WorkoutTracker = () => {
   const [workouts, setWorkouts] = useState([]);
   const [templates, setTemplates] = useState({});
@@ -476,123 +478,119 @@ const WorkoutTracker = () => {
     },
   };
 
-  // Initialize database and load data
-  useEffect(() => {
-    const initDB = async () => {
-      try {
-        const database = new WorkoutDB();
-        await database.init();
-        setDb(database);
+// Remove the first useEffect (lines around 300-400) and keep only this one:
+useEffect(() => {
+  const initDB = async () => {
+    try {
+      const database = new WorkoutDB();
+      await database.init();
+      setDb(database);
 
-        // Load data from IndexedDB
-        // Find this section and ADD these lines after loading other settings:
-        const [
-          savedWorkouts,
-          savedTemplates,
-          savedPinnedTemplates,
-          savedIsFirstTime,
-          savedUseKg,
-          savedFirstLoginDate, // ADD THIS
-          savedIsSubscribed, // ADD THIS
-        ] = await Promise.all([
-          database.getAllWorkouts(),
-          database.getAllTemplates(),
-          database.getSetting("pinnedTemplates"),
-          database.getSetting("isFirstTime"),
-          database.getSetting("useKg"),
-          database.getSetting("firstLoginDate"), // ADD THIS
-          database.getSetting("isSubscribed"), // ADD THIS
-        ]);
+      // Check URL parameter FIRST before loading any data
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasSuccessParam = urlParams.get("success") === "true";
+      
+      console.log("URL success parameter:", hasSuccessParam); // Debug log
 
-        // ADD this block after your existing data loading:
-        // Set first login date if not exists
-        if (!savedFirstLoginDate) {
-          const now = new Date().toISOString();
-          await database.saveSetting("firstLoginDate", now);
-          setFirstLoginDate(now);
-        } else {
-          setFirstLoginDate(savedFirstLoginDate);
-        }
+      // Load data from IndexedDB
+      const [
+        savedWorkouts,
+        savedTemplates,
+        savedPinnedTemplates,
+        savedIsFirstTime,
+        savedUseKg,
+        savedFirstLoginDate,
+        savedIsSubscribed,
+      ] = await Promise.all([
+        database.getAllWorkouts(),
+        database.getAllTemplates(),
+        database.getSetting("pinnedTemplates"),
+        database.getSetting("isFirstTime"),
+        database.getSetting("useKg"),
+        database.getSetting("firstLoginDate"),
+        database.getSetting("isSubscribed"),
+      ]);
 
-        setIsSubscribed(savedIsSubscribed || false);
-
-        // Clean up Example workouts if user is no longer first-time
-        if (savedIsFirstTime === false) {
-          // Remove Example workouts from database and current state
-          const exampleWorkouts = (savedWorkouts || []).filter(
-            (w) => w.templateName === "Example"
-          );
-          if (exampleWorkouts.length > 0) {
-            exampleWorkouts.forEach(async (workout) => {
-              try {
-                await database.deleteWorkout(workout.id);
-              } catch (error) {
-                console.error("Failed to delete Example workout:", error);
-              }
-            });
-          }
-
-          // Filter out Example workouts from loaded workouts
-          const filteredWorkouts = (savedWorkouts || []).filter(
-            (w) => w.templateName !== "Example"
-          );
-          setWorkouts(filteredWorkouts);
-        } else {
-          setWorkouts(savedWorkouts || []);
-        }
-
-        // Initialize templates - preserve saved templates, only use defaults if none exist
-        let initialTemplates;
-        if (Object.keys(savedTemplates || {}).length > 0) {
-          // User has saved templates, use them
-          initialTemplates = savedTemplates;
-
-          // Remove beginner template from saved templates if user is no longer first-time
-          if (savedIsFirstTime === false && initialTemplates.beginner) {
-            delete initialTemplates.beginner;
-            await database.deleteTemplate("beginner");
-          }
-        } else {
-          // No saved templates, initialize with defaults based on first-time status
-          initialTemplates =
-            savedIsFirstTime === false
-              ? realTemplates
-              : { beginner: beginnerTemplate, ...realTemplates };
-        }
-
-        setTemplates(initialTemplates);
-        setPinnedTemplates(savedPinnedTemplates || []);
-        setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
-        setUseKg(savedUseKg || false);
-      } catch (error) {
-        console.error("Failed to initialize IndexedDB:", error);
-        // Fallback to in-memory state
-        setTemplates({ beginner: beginnerTemplate });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initDB();
-  }, []);
-
-  // Add this NEW useEffect after your existing ones:
-  useEffect(() => {
-    // Check if user just completed Stripe payment
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("success") === "true") {
-      // Mark user as subscribed
-      setIsSubscribed(true);
-
-      // Save to database
-      if (db) {
-        db.saveSetting("isSubscribed", true);
+      // Set first login date if not exists
+      if (!savedFirstLoginDate) {
+        const now = new Date().toISOString();
+        await database.saveSetting("firstLoginDate", now);
+        setFirstLoginDate(now);
+      } else {
+        setFirstLoginDate(savedFirstLoginDate);
       }
 
-      // Clean up URL (removes ?success=true from address bar)
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Handle subscription status - URL parameter takes absolute priority
+      if (hasSuccessParam) {
+        console.log("Success parameter detected - setting subscribed to true");
+        setIsSubscribed(true);
+        setShowPaywall(false);
+        await database.saveSetting("isSubscribed", true);
+        // Clean up URL immediately
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Use saved subscription status
+        const subscriptionStatus = savedIsSubscribed || false;
+        console.log("Using saved subscription status:", subscriptionStatus);
+        setIsSubscribed(subscriptionStatus);
+      }
+
+      // Clean up Example workouts if user is no longer first-time
+      if (savedIsFirstTime === false) {
+        const exampleWorkouts = (savedWorkouts || []).filter(
+          (w) => w.templateName === "Example"
+        );
+        if (exampleWorkouts.length > 0) {
+          exampleWorkouts.forEach(async (workout) => {
+            try {
+              await database.deleteWorkout(workout.id);
+            } catch (error) {
+              console.error("Failed to delete Example workout:", error);
+            }
+          });
+        }
+
+        const filteredWorkouts = (savedWorkouts || []).filter(
+          (w) => w.templateName !== "Example"
+        );
+        setWorkouts(filteredWorkouts);
+      } else {
+        setWorkouts(savedWorkouts || []);
+      }
+
+      // Initialize templates
+      let initialTemplates;
+      if (Object.keys(savedTemplates || {}).length > 0) {
+        initialTemplates = savedTemplates;
+
+        if (savedIsFirstTime === false && initialTemplates.beginner) {
+          delete initialTemplates.beginner;
+          await database.deleteTemplate("beginner");
+        }
+      } else {
+        initialTemplates =
+          savedIsFirstTime === false
+            ? realTemplates
+            : { beginner: beginnerTemplate, ...realTemplates };
+      }
+
+      setTemplates(initialTemplates);
+      setPinnedTemplates(savedPinnedTemplates || []);
+      setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
+      setUseKg(savedUseKg || false);
+      
+    } catch (error) {
+      console.error("Failed to initialize IndexedDB:", error);
+      setTemplates({ beginner: beginnerTemplate });
+    } finally {
+      setIsLoading(false);
     }
-  }, [db]);
+  };
+
+  initDB();
+}, []);
+
+  
 
   // Save data to IndexedDB when state changes
   useEffect(() => {
@@ -665,16 +663,16 @@ const WorkoutTracker = () => {
     saveUseKg();
   }, [useKg, db, isLoading]);
 
-  // Add this NEW useEffect to check trial status every second:
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
-        setShowPaywall(true);
-      }
-    }, 60000); // Check every minute instead of every second
-  
-    return () => clearInterval(interval);
-  }, [firstLoginDate, isSubscribed, showPaywall]);
+// Also update the useEffect that checks trial status:
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
+      setShowPaywall(true);
+    }
+  }, 5000); // Change from 60000 (1 minute) to 1000 (1 second) for faster testing
+
+  return () => clearInterval(interval);
+}, [firstLoginDate, isSubscribed, showPaywall]);
 
   useEffect(() => {
     if (workouts.length > 0) {
@@ -822,15 +820,28 @@ const WorkoutTracker = () => {
     setShowResult(false);
   };
 
-  const checkTrialStatus = () => {
-    if (isSubscribed || !firstLoginDate) return true;
-    
-    const trialStart = new Date(firstLoginDate);
-    const now = new Date();
-    const daysPassed = (now - trialStart) / (1000 * 60 * 60 * 24);
-    
-    return daysPassed <= 5;
-  };
+// Find this function in your code:
+const checkTrialStatus = () => {
+  console.log("checkTrialStatus called - isSubscribed:", isSubscribed, "firstLoginDate:", firstLoginDate);
+  
+  if (isSubscribed || !firstLoginDate) {
+    console.log("Trial check: returning true (subscribed or no first login)");
+    return true;
+  }
+
+  const trialStart = new Date(firstLoginDate);
+  const now = new Date();
+  const secondsPassed = (now - trialStart) / 1000;
+  
+  console.log("Trial check: seconds passed:", secondsPassed);
+  // Use 30 seconds for testing, change to longer period for production
+  const isStillInTrial = secondsPassed <= 30; // Increased from 5 to 30 seconds for easier testing
+  console.log("Trial check: still in trial?", isStillInTrial);
+  
+  return isStillInTrial;
+};
+
+
 
   const exportUserData = async (db, workouts) => {
     try {
@@ -1411,6 +1422,23 @@ const WorkoutTracker = () => {
     setProgressInsights(null);
   };
 
+
+  {process.env.NODE_ENV === 'development' && (
+    <button
+      onClick={() => {
+        console.log("Manual success test triggered");
+        setIsSubscribed(true);
+        setShowPaywall(false);
+        if (db) {
+          db.saveSetting("isSubscribed", true);
+        }
+      }}
+      className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded text-sm z-50"
+    >
+      TEST SUCCESS
+    </button>
+  )}
+
   // History View
   if (showHistory) {
     return (
@@ -1421,9 +1449,9 @@ const WorkoutTracker = () => {
               <h1 className="text-2xl font-semibold text-gray-900">History</h1>
               <button
                 onClick={() => exportUserData(db, workouts)}
-                className="px-2 py-2 text-xs border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors flex items-center space-x-1"
+                className="py-1 px-2 bg-gray-100 text-gray-400 hover:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Download className="w-3 h-3" />
+                <Download className="w-4 h-4" />
               </button>
             </div>
             <button
@@ -1582,16 +1610,16 @@ const WorkoutTracker = () => {
 
             {/* Same day workout after demo completion - first real workout */}
             {!isFirstTime && workouts.length >= 1 && !streakNotification && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
-                  <div className="text-4xl mb-2">🎯</div>
-                  <p className="text-blue-800 font-medium text-lg mb-2">
-                    Workout complete!
-                  </p>
-                  <p className="text-blue-600 text-sm font-light">
-                    Nice work! Come back tomorrow to start building a streak!
-                  </p>
-                </div>
-              )}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
+                <div className="text-4xl mb-2">🎯</div>
+                <p className="text-blue-800 font-medium text-lg mb-2">
+                  Workout complete!
+                </p>
+                <p className="text-blue-600 text-sm font-light">
+                  Nice work! Come back tomorrow to start building a streak!
+                </p>
+              </div>
+            )}
 
             {streakNotification && (
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center transition-all hover:bg-blue-100 hover:shadow-md cursor-pointer">
@@ -1988,10 +2016,13 @@ const WorkoutTracker = () => {
 
   // Trial and paywall check
   if (!checkTrialStatus() && !showPaywall) {
+    console.log("Setting paywall to true");
     setShowPaywall(true);
   }
+  
 
   if (showPaywall) {
+    console.log("Showing paywall - isSubscribed:", isSubscribed, "showPaywall:", showPaywall);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-6">
