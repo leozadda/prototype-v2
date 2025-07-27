@@ -1568,7 +1568,7 @@ const WorkoutTracker = () => {
               )}
 
             {/* First workout completion message */}
-            {!isFirstTime && workouts.length === 1 && (
+            {!isFirstTime && workouts.length === 1 && !streakNotification && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
                 <div className="text-4xl mb-2">🎉</div>
                 <p className="text-green-800 font-medium text-lg mb-2">
@@ -1581,14 +1581,7 @@ const WorkoutTracker = () => {
             )}
 
             {/* Same day workout after demo completion - first real workout */}
-            {!isFirstTime &&
-              workouts.some((w) => w.templateName === "Example") &&
-              completedWorkoutData?.templateName !== "Example" &&
-              workouts.filter((w) => w.templateName !== "Example").length >=
-                1 &&
-              new Date(
-                workouts.find((w) => w.templateName === "Example")?.date
-              ).toDateString() === new Date().toDateString() && (
+            {!isFirstTime && workouts.length >= 1 && !streakNotification && (
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
                   <div className="text-4xl mb-2">🎯</div>
                   <p className="text-blue-800 font-medium text-lg mb-2">
