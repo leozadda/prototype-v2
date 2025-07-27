@@ -671,8 +671,8 @@ const WorkoutTracker = () => {
       if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
         setShowPaywall(true);
       }
-    }, 1000); // Check every second
-
+    }, 60000); // Check every minute instead of every second
+  
     return () => clearInterval(interval);
   }, [firstLoginDate, isSubscribed, showPaywall]);
 
@@ -824,12 +824,12 @@ const WorkoutTracker = () => {
 
   const checkTrialStatus = () => {
     if (isSubscribed || !firstLoginDate) return true;
-
+    
     const trialStart = new Date(firstLoginDate);
     const now = new Date();
-    const secondsPassed = (now - trialStart) / 1000;
-
-    return secondsPassed <= 5;
+    const daysPassed = (now - trialStart) / (1000 * 60 * 60 * 24);
+    
+    return daysPassed <= 5;
   };
 
   const exportUserData = async (db, workouts) => {
