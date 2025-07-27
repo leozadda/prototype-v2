@@ -158,8 +158,6 @@ class WorkoutDB {
   }
 }
 
-
-
 const WorkoutTracker = () => {
   const [workouts, setWorkouts] = useState([]);
   const [templates, setTemplates] = useState({});
@@ -478,119 +476,122 @@ const WorkoutTracker = () => {
     },
   };
 
-// Remove the first useEffect (lines around 300-400) and keep only this one:
-useEffect(() => {
-  const initDB = async () => {
-    try {
-      const database = new WorkoutDB();
-      await database.init();
-      setDb(database);
+  // Remove the first useEffect (lines around 300-400) and keep only this one:
+  useEffect(() => {
+    const initDB = async () => {
+      try {
+        const database = new WorkoutDB();
+        await database.init();
+        setDb(database);
 
-      // Check URL parameter FIRST before loading any data
-      const urlParams = new URLSearchParams(window.location.search);
-      const hasSuccessParam = urlParams.get("success") === "true";
-      
-      console.log("URL success parameter:", hasSuccessParam); // Debug log
+        // Check URL parameter FIRST before loading any data
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasSuccessParam = urlParams.get("success") === "true";
 
-      // Load data from IndexedDB
-      const [
-        savedWorkouts,
-        savedTemplates,
-        savedPinnedTemplates,
-        savedIsFirstTime,
-        savedUseKg,
-        savedFirstLoginDate,
-        savedIsSubscribed,
-      ] = await Promise.all([
-        database.getAllWorkouts(),
-        database.getAllTemplates(),
-        database.getSetting("pinnedTemplates"),
-        database.getSetting("isFirstTime"),
-        database.getSetting("useKg"),
-        database.getSetting("firstLoginDate"),
-        database.getSetting("isSubscribed"),
-      ]);
+        console.log("URL success parameter:", hasSuccessParam); // Debug log
 
-      // Set first login date if not exists
-      if (!savedFirstLoginDate) {
-        const now = new Date().toISOString();
-        await database.saveSetting("firstLoginDate", now);
-        setFirstLoginDate(now);
-      } else {
-        setFirstLoginDate(savedFirstLoginDate);
-      }
+        // Load data from IndexedDB
+        const [
+          savedWorkouts,
+          savedTemplates,
+          savedPinnedTemplates,
+          savedIsFirstTime,
+          savedUseKg,
+          savedFirstLoginDate,
+          savedIsSubscribed,
+        ] = await Promise.all([
+          database.getAllWorkouts(),
+          database.getAllTemplates(),
+          database.getSetting("pinnedTemplates"),
+          database.getSetting("isFirstTime"),
+          database.getSetting("useKg"),
+          database.getSetting("firstLoginDate"),
+          database.getSetting("isSubscribed"),
+        ]);
 
-      // Handle subscription status - URL parameter takes absolute priority
-      if (hasSuccessParam) {
-        console.log("Success parameter detected - setting subscribed to true");
-        setIsSubscribed(true);
-        setShowPaywall(false);
-        await database.saveSetting("isSubscribed", true);
-        // Clean up URL immediately
-        window.history.replaceState({}, document.title, window.location.pathname);
-      } else {
-        // Use saved subscription status
-        const subscriptionStatus = savedIsSubscribed || false;
-        console.log("Using saved subscription status:", subscriptionStatus);
-        setIsSubscribed(subscriptionStatus);
-      }
-
-      // Clean up Example workouts if user is no longer first-time
-      if (savedIsFirstTime === false) {
-        const exampleWorkouts = (savedWorkouts || []).filter(
-          (w) => w.templateName === "Example"
-        );
-        if (exampleWorkouts.length > 0) {
-          exampleWorkouts.forEach(async (workout) => {
-            try {
-              await database.deleteWorkout(workout.id);
-            } catch (error) {
-              console.error("Failed to delete Example workout:", error);
-            }
-          });
+        // Set first login date if not exists
+        if (!savedFirstLoginDate) {
+          const now = new Date().toISOString();
+          await database.saveSetting("firstLoginDate", now);
+          setFirstLoginDate(now);
+        } else {
+          setFirstLoginDate(savedFirstLoginDate);
         }
 
-        const filteredWorkouts = (savedWorkouts || []).filter(
-          (w) => w.templateName !== "Example"
-        );
-        setWorkouts(filteredWorkouts);
-      } else {
-        setWorkouts(savedWorkouts || []);
-      }
-
-      // Initialize templates
-      let initialTemplates;
-      if (Object.keys(savedTemplates || {}).length > 0) {
-        initialTemplates = savedTemplates;
-
-        if (savedIsFirstTime === false && initialTemplates.beginner) {
-          delete initialTemplates.beginner;
-          await database.deleteTemplate("beginner");
+        // Handle subscription status - URL parameter takes absolute priority
+        if (hasSuccessParam) {
+          console.log(
+            "Success parameter detected - setting subscribed to true"
+          );
+          setIsSubscribed(true);
+          setShowPaywall(false);
+          await database.saveSetting("isSubscribed", true);
+          // Clean up URL immediately
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+        } else {
+          // Use saved subscription status
+          const subscriptionStatus = savedIsSubscribed || false;
+          console.log("Using saved subscription status:", subscriptionStatus);
+          setIsSubscribed(subscriptionStatus);
         }
-      } else {
-        initialTemplates =
-          savedIsFirstTime === false
-            ? realTemplates
-            : { beginner: beginnerTemplate, ...realTemplates };
+
+        // Clean up Example workouts if user is no longer first-time
+        if (savedIsFirstTime === false) {
+          const exampleWorkouts = (savedWorkouts || []).filter(
+            (w) => w.templateName === "Example"
+          );
+          if (exampleWorkouts.length > 0) {
+            exampleWorkouts.forEach(async (workout) => {
+              try {
+                await database.deleteWorkout(workout.id);
+              } catch (error) {
+                console.error("Failed to delete Example workout:", error);
+              }
+            });
+          }
+
+          const filteredWorkouts = (savedWorkouts || []).filter(
+            (w) => w.templateName !== "Example"
+          );
+          setWorkouts(filteredWorkouts);
+        } else {
+          setWorkouts(savedWorkouts || []);
+        }
+
+        // Initialize templates
+        let initialTemplates;
+        if (Object.keys(savedTemplates || {}).length > 0) {
+          initialTemplates = savedTemplates;
+
+          if (savedIsFirstTime === false && initialTemplates.beginner) {
+            delete initialTemplates.beginner;
+            await database.deleteTemplate("beginner");
+          }
+        } else {
+          initialTemplates =
+            savedIsFirstTime === false
+              ? realTemplates
+              : { beginner: beginnerTemplate, ...realTemplates };
+        }
+
+        setTemplates(initialTemplates);
+        setPinnedTemplates(savedPinnedTemplates || []);
+        setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
+        setUseKg(savedUseKg || false);
+      } catch (error) {
+        console.error("Failed to initialize IndexedDB:", error);
+        setTemplates({ beginner: beginnerTemplate });
+      } finally {
+        setIsLoading(false);
       }
+    };
 
-      setTemplates(initialTemplates);
-      setPinnedTemplates(savedPinnedTemplates || []);
-      setIsFirstTime(savedIsFirstTime == null ? true : savedIsFirstTime);
-      setUseKg(savedUseKg || false);
-      
-    } catch (error) {
-      console.error("Failed to initialize IndexedDB:", error);
-      setTemplates({ beginner: beginnerTemplate });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  initDB();
-}, []);
-
-  
+    initDB();
+  }, []);
 
   // Save data to IndexedDB when state changes
   useEffect(() => {
@@ -663,16 +664,16 @@ useEffect(() => {
     saveUseKg();
   }, [useKg, db, isLoading]);
 
-// Also update the useEffect that checks trial status:
-useEffect(() => {
-  const interval = setInterval(() => {
-    if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
-      setShowPaywall(true);
-    }
-  }, 5000); // Change from 60000 (1 minute) to 1000 (1 second) for faster testing
+  // Also update the useEffect that checks trial status:
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
+        setShowPaywall(true);
+      }
+    }, 5000); // Change from 60000 (1 minute) to 1000 (1 second) for faster testing
 
-  return () => clearInterval(interval);
-}, [firstLoginDate, isSubscribed, showPaywall]);
+    return () => clearInterval(interval);
+  }, [firstLoginDate, isSubscribed, showPaywall]);
 
   useEffect(() => {
     if (workouts.length > 0) {
@@ -820,28 +821,31 @@ useEffect(() => {
     setShowResult(false);
   };
 
-// Find this function in your code:
-const checkTrialStatus = () => {
-  console.log("checkTrialStatus called - isSubscribed:", isSubscribed, "firstLoginDate:", firstLoginDate);
-  
-  if (isSubscribed || !firstLoginDate) {
-    console.log("Trial check: returning true (subscribed or no first login)");
-    return true;
-  }
+  // Find this function in your code:
+  const checkTrialStatus = () => {
+    console.log(
+      "checkTrialStatus called - isSubscribed:",
+      isSubscribed,
+      "firstLoginDate:",
+      firstLoginDate
+    );
 
-  const trialStart = new Date(firstLoginDate);
-  const now = new Date();
-  const secondsPassed = (now - trialStart) / 1000;
-  
-  console.log("Trial check: seconds passed:", secondsPassed);
-  // Use 30 seconds for testing, change to longer period for production
-  const isStillInTrial = secondsPassed <= 30; // Increased from 5 to 30 seconds for easier testing
-  console.log("Trial check: still in trial?", isStillInTrial);
-  
-  return isStillInTrial;
-};
+    if (isSubscribed || !firstLoginDate) {
+      console.log("Trial check: returning true (subscribed or no first login)");
+      return true;
+    }
 
+    const trialStart = new Date(firstLoginDate);
+    const now = new Date();
+    const secondsPassed = (now - trialStart) / 1000;
 
+    console.log("Trial check: seconds passed:", secondsPassed);
+    // Use 30 seconds for testing, change to longer period for production
+    const isStillInTrial = secondsPassed <= 30; // Increased from 5 to 30 seconds for easier testing
+    console.log("Trial check: still in trial?", isStillInTrial);
+
+    return isStillInTrial;
+  };
 
   const exportUserData = async (db, workouts) => {
     try {
@@ -1422,22 +1426,23 @@ const checkTrialStatus = () => {
     setProgressInsights(null);
   };
 
-
-  {process.env.NODE_ENV === 'development' && (
-    <button
-      onClick={() => {
-        console.log("Manual success test triggered");
-        setIsSubscribed(true);
-        setShowPaywall(false);
-        if (db) {
-          db.saveSetting("isSubscribed", true);
-        }
-      }}
-      className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded text-sm z-50"
-    >
-      TEST SUCCESS
-    </button>
-  )}
+  {
+    process.env.NODE_ENV === "development" && (
+      <button
+        onClick={() => {
+          console.log("Manual success test triggered");
+          setIsSubscribed(true);
+          setShowPaywall(false);
+          if (db) {
+            db.saveSetting("isSubscribed", true);
+          }
+        }}
+        className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded text-sm z-50"
+      >
+        TEST SUCCESS
+      </button>
+    );
+  }
 
   // History View
   if (showHistory) {
@@ -2019,10 +2024,14 @@ const checkTrialStatus = () => {
     console.log("Setting paywall to true");
     setShowPaywall(true);
   }
-  
 
   if (showPaywall) {
-    console.log("Showing paywall - isSubscribed:", isSubscribed, "showPaywall:", showPaywall);
+    console.log(
+      "Showing paywall - isSubscribed:",
+      isSubscribed,
+      "showPaywall:",
+      showPaywall
+    );
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md mx-auto p-6">
@@ -2035,7 +2044,7 @@ const checkTrialStatus = () => {
               Subscribe for $5/month to continue tracking your workouts.
             </p>
             <a
-              href="https://buy.stripe.com/7sY8wP3JN7kRbmcfFyefC01"
+              href="https://buy.stripe.com/fZu14n3JNdJffCs8d6efC02"
               className="block w-auto bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
             >
               Subscribe
