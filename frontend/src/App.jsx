@@ -182,6 +182,9 @@ const WorkoutTracker = () => {
   const [useKg, setUseKg] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
   const [inputValues, setInputValues] = useState({});
+  const [firstLoginDate, setFirstLoginDate] = useState(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   // Get today's date formatted nicely
   const getTodaysDate = () => {
@@ -482,19 +485,36 @@ const WorkoutTracker = () => {
         setDb(database);
 
         // Load data from IndexedDB
+        // Find this section and ADD these lines after loading other settings:
         const [
           savedWorkouts,
           savedTemplates,
           savedPinnedTemplates,
           savedIsFirstTime,
           savedUseKg,
+          savedFirstLoginDate, // ADD THIS
+          savedIsSubscribed, // ADD THIS
         ] = await Promise.all([
           database.getAllWorkouts(),
           database.getAllTemplates(),
           database.getSetting("pinnedTemplates"),
           database.getSetting("isFirstTime"),
           database.getSetting("useKg"),
+          database.getSetting("firstLoginDate"), // ADD THIS
+          database.getSetting("isSubscribed"), // ADD THIS
         ]);
+
+        // ADD this block after your existing data loading:
+        // Set first login date if not exists
+        if (!savedFirstLoginDate) {
+          const now = new Date().toISOString();
+          await database.saveSetting("firstLoginDate", now);
+          setFirstLoginDate(now);
+        } else {
+          setFirstLoginDate(savedFirstLoginDate);
+        }
+
+        setIsSubscribed(savedIsSubscribed || false);
 
         // Clean up Example workouts if user is no longer first-time
         if (savedIsFirstTime === false) {
@@ -555,6 +575,24 @@ const WorkoutTracker = () => {
 
     initDB();
   }, []);
+
+  // Add this NEW useEffect after your existing ones:
+  useEffect(() => {
+    // Check if user just completed Stripe payment
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("success") === "true") {
+      // Mark user as subscribed
+      setIsSubscribed(true);
+
+      // Save to database
+      if (db) {
+        db.saveSetting("isSubscribed", true);
+      }
+
+      // Clean up URL (removes ?success=true from address bar)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [db]);
 
   // Save data to IndexedDB when state changes
   useEffect(() => {
@@ -627,6 +665,17 @@ const WorkoutTracker = () => {
     saveUseKg();
   }, [useKg, db, isLoading]);
 
+  // Add this NEW useEffect to check trial status every second:
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!checkTrialStatus() && !showPaywall && !isSubscribed) {
+        setShowPaywall(true);
+      }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [firstLoginDate, isSubscribed, showPaywall]);
+
   useEffect(() => {
     if (workouts.length > 0) {
       const insights = getProgressInsights(workouts, useKg, convertWeight);
@@ -651,7 +700,7 @@ const WorkoutTracker = () => {
     const { beginner, ...remainingTemplates } = templates;
     setTemplates({ ...remainingTemplates, ...realTemplates });
     setIsFirstTime(false);
-    
+
     // Save the isFirstTime status to IndexedDB
     if (db) {
       try {
@@ -660,9 +709,9 @@ const WorkoutTracker = () => {
         console.error("Failed to save isFirstTime setting:", error);
       }
     }
-    
+
     setShowUnlockMessage(true);
-  
+
     setTimeout(() => {
       setShowUnlockMessage(false);
     }, 4000);
@@ -771,6 +820,16 @@ const WorkoutTracker = () => {
     setStartTime(Date.now());
     setLogStartTime(Date.now());
     setShowResult(false);
+  };
+
+  const checkTrialStatus = () => {
+    if (isSubscribed || !firstLoginDate) return true;
+
+    const trialStart = new Date(firstLoginDate);
+    const now = new Date();
+    const secondsPassed = (now - trialStart) / 1000;
+
+    return secondsPassed <= 5;
   };
 
   const exportUserData = async (db, workouts) => {
@@ -1933,6 +1992,35 @@ const WorkoutTracker = () => {
   // Main Template Selection View
   const streakData = getStreakData();
   const sortedTemplates = getSortedTemplates();
+
+  // Trial and paywall check
+  if (!checkTrialStatus() && !showPaywall) {
+    setShowPaywall(true);
+  }
+
+  if (showPaywall) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto p-6">
+          <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
+            <div className="text-4xl mb-4">⏰</div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Free trial over!
+            </h2>
+            <p className="text-gray-600">
+              Subscribe for $5/month to continue tracking your workouts.
+            </p>
+            <a
+              href="https://buy.stripe.com/7sY8wP3JN7kRbmcfFyefC01"
+              className="block w-auto bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+            >
+              Subscribe
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
