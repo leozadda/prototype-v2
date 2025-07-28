@@ -213,7 +213,7 @@ const WorkoutTracker = () => {
         name: "Overhead Phone Press",
         sets: 1,
         reps: 0,
-        weight: .25,
+        weight: 0.25,
         bodyPart: "shoulders",
       },
       { name: "Jar Opens", sets: 1, reps: 0, weight: 2, bodyPart: "forearms" },
@@ -1428,149 +1428,149 @@ const WorkoutTracker = () => {
     );
   }
 
-// History View
-if (showHistory) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-semibold text-gray-900">History</h1>
+  // History View
+  if (showHistory) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-2xl mx-auto p-6">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-3">
+              <h1 className="text-2xl font-semibold text-gray-900">History</h1>
+              <button
+                onClick={() => exportUserData(db, workouts)}
+                className="py-1 px-2 bg-gray-100 text-gray-400 hover:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
             <button
-              onClick={() => exportUserData(db, workouts)}
-              className="py-1 px-2 bg-gray-100 text-gray-400 hover:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setShowHistory(false)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <Download className="w-4 h-4" />
+              <ArrowLeft className="w-5 h-5" />
             </button>
           </div>
-          <button
-            onClick={() => setShowHistory(false)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-        </div>
 
-        <div className="space-y-4">
-          {workouts
-            .slice()
-            .reverse()
-            .map((workout, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow"
-              >
-                {/* Main workout content - NOT clickable */}
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        {workout.templateName}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {formatDate(workout.date)}
-                      </p>
+          <div className="space-y-4">
+            {workouts
+              .slice()
+              .reverse()
+              .map((workout, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow"
+                >
+                  {/* Main workout content - NOT clickable */}
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          {workout.templateName}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {formatDate(workout.date)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">
+                          {useKg
+                            ? Math.round(
+                                workout.exercises.reduce(
+                                  (total, ex) =>
+                                    total +
+                                    ex.sets *
+                                      ex.reps *
+                                      convertWeight(ex.weight),
+                                  0
+                                )
+                              ).toLocaleString()
+                            : workout.volume.toLocaleString()}{" "}
+                          {getWeightUnit()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {workout.exercises.length} exercises
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">
-                        {useKg
-                          ? Math.round(
-                              workout.exercises.reduce(
-                                (total, ex) =>
-                                  total +
-                                  ex.sets *
-                                    ex.reps *
-                                    convertWeight(ex.weight),
-                                0
-                              )
-                            ).toLocaleString()
-                          : workout.volume.toLocaleString()}{" "}
-                        {getWeightUnit()}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {workout.exercises.length} exercises
-                      </p>
+
+                    <div className="space-y-2">
+                      {workout.exercises.map((exercise, exIndex) => (
+                        <div
+                          key={exIndex}
+                          className="text-sm text-gray-600 flex justify-between py-1"
+                        >
+                          <span>{exercise.name}</span>
+                          <span className="font-mono">
+                            {exercise.sets} × {exercise.reps} @{" "}
+                            {convertWeight(exercise.weight)}
+                            {getWeightUnit()}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    {workout.exercises.map((exercise, exIndex) => (
-                      <div
-                        key={exIndex}
-                        className="text-sm text-gray-600 flex justify-between py-1"
+                  {/* Separate button area - Safari iOS friendly */}
+                  <div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmation(workout.id)}
+                        className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
+                        style={{
+                          WebkitAppearance: "none",
+                          WebkitTapHighlightColor: "transparent",
+                          touchAction: "manipulation",
+                          cursor: "pointer",
+                        }}
+                        title="Delete workout"
                       >
-                        <span>{exercise.name}</span>
-                        <span className="font-mono">
-                          {exercise.sets} × {exercise.reps} @{" "}
-                          {convertWeight(exercise.weight)}
-                          {getWeightUnit()}
-                        </span>
-                      </div>
-                    ))}
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              ))}
 
-                {/* Separate button area - Safari iOS friendly */}
-                <div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setDeleteConfirmation(workout.id)}
-                      className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
-                      style={{ 
-                        WebkitAppearance: 'none',
-                        WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation',
-                        cursor: 'pointer'
-                      }}
-                      title="Delete workout"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            {workouts.length === 0 && (
+              <div className="text-center py-16">
+                <div className="text-4xl mb-4">📊</div>
+                <p className="text-gray-500">No workouts</p>
+              </div>
+            )}
+          </div>
+
+          {deleteConfirmation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
+                <p className="text-gray-600 mb-6">
+                  Are you sure? It will be gone forever.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      deleteWorkout(deleteConfirmation);
+                      setDeleteConfirmation(null);
+                    }}
+                    className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirmation(null)}
+                    className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-            ))}
-
-          {workouts.length === 0 && (
-            <div className="text-center py-16">
-              <div className="text-4xl mb-4">📊</div>
-              <p className="text-gray-500">No workouts</p>
             </div>
           )}
         </div>
-
-        {deleteConfirmation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-              <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure? It will be gone forever.
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => {
-                    deleteWorkout(deleteConfirmation);
-                    setDeleteConfirmation(null);
-                  }}
-                  className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => setDeleteConfirmation(null)}
-                  className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   // Results View
   if (showResult) {
@@ -2160,16 +2160,21 @@ if (showHistory) {
                     </div>
 
                     <div className="text-sm text-gray-600 space-y-1">
-  {displayTemplate.exercises
-    .slice(0, 3)
-    .map((exercise, index) => (
-<div key={index} className="flex justify-between items-center">
-  <span className="pr-2">{exercise.name}</span>
-  <span className="font-mono text-xs text-gray-500 text-right">
-    {exercise.sets} × {exercise.reps} @ {convertWeight(exercise.weight)}{getWeightUnit()}
-  </span>
-</div>
-    ))}
+                      {displayTemplate.exercises
+                        .slice(0, 3)
+                        .map((exercise, index) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center"
+                          >
+                            <span className="pr-2">{exercise.name}</span>
+                            <span className="font-mono text-xs text-gray-500 text-right">
+                              {exercise.sets} × {exercise.reps} @{" "}
+                              {convertWeight(exercise.weight)}
+                              {getWeightUnit()}
+                            </span>
+                          </div>
+                        ))}
                       {displayTemplate.exercises.length > 3 && (
                         <div className="text-xs text-gray-400 italic">
                           +{displayTemplate.exercises.length - 3} more exercise
@@ -2182,16 +2187,16 @@ if (showHistory) {
                   </div>
 
                   {!isLocked && (
-                    <div className="flex items-start space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex flex-col items-center space-y-1 ml-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           togglePinTemplate(templateKey);
                         }}
-                        className={`p-2 rounded-lg transition-colors ${
+                        className={`p-1 rounded-lg transition-colors ${
                           isPinned
-                            ? "text-blue-600 bg-blue-50 hover:bg-blue-100"
-                            : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                            ? "text-blue-600 bg-blue-50"
+                            : "text-gray-300 hover:text-gray-600"
                         }`}
                         title={isPinned ? "Unpin template" : "Pin template"}
                       >
@@ -2204,7 +2209,7 @@ if (showHistory) {
                             e.stopPropagation();
                             deleteTemplate(templateKey);
                           }}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete template"
                         >
                           <Trash2 className="w-4 h-4" />
