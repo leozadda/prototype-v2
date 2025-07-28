@@ -2163,12 +2163,12 @@ if (showHistory) {
   {displayTemplate.exercises
     .slice(0, 3)
     .map((exercise, index) => (
-      <div key={index} className="flex justify-between items-center">
-        <span className="truncate pr-2 flex-1">{exercise.name}</span>
-        <span className="font-mono text-xs text-gray-500 whitespace-nowrap text-right min-w-0 flex-shrink-0">
-          {exercise.sets} × {exercise.reps} @ {convertWeight(exercise.weight)} {getWeightUnit()}
-        </span>
-      </div>
+<div key={index} className="flex justify-between items-center">
+  <span className="pr-2">{exercise.name}</span>
+  <span className="font-mono text-xs text-gray-500 text-right">
+    {exercise.sets} × {exercise.reps} @ {convertWeight(exercise.weight)}{getWeightUnit()}
+  </span>
+</div>
     ))}
                       {displayTemplate.exercises.length > 3 && (
                         <div className="text-xs text-gray-400 italic">
