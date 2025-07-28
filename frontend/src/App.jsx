@@ -2170,7 +2170,7 @@ const WorkoutTracker = () => {
                             <span className="pr-2">{exercise.name}</span>
                             <span className="font-mono text-xs text-gray-500 text-right">
                               {exercise.sets} × {exercise.reps} @{" "}
-                              {convertWeight(exercise.weight)}
+                              {convertWeight(exercise.weight)}{" "}
                               {getWeightUnit()}
                             </span>
                           </div>
@@ -2187,7 +2187,7 @@ const WorkoutTracker = () => {
                   </div>
 
                   {!isLocked && (
-                    <div className="flex flex-col items-center space-y-1 ml-2">
+                    <div className="flex flex-col items-center space-y-2 ml-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
