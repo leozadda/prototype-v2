@@ -198,30 +198,30 @@ const WorkoutTracker = () => {
 
   // First-time user template
   const beginnerTemplate = {
-    name: "Example",
+    name: "Template (Example)",
     emoji: "🤔",
     color: "bg-gradient-to-r from-blue-500 to-purple-600",
     exercises: [
       {
         name: "Grocery Carries",
-        sets: 0,
+        sets: 1,
         reps: 0,
-        weight: 0,
+        weight: 5,
         bodyPart: "full body",
       },
       {
         name: "Overhead Phone Press",
-        sets: 0,
+        sets: 1,
         reps: 0,
-        weight: 0,
+        weight: .25,
         bodyPart: "shoulders",
       },
-      { name: "Jar Opens", sets: 0, reps: 0, weight: 0, bodyPart: "forearms" },
+      { name: "Jar Opens", sets: 1, reps: 0, weight: 2, bodyPart: "forearms" },
       {
         name: "Couch Squats",
-        sets: 0,
+        sets: 1,
         reps: 0,
-        weight: 0,
+        weight: 180,
         bodyPart: "quads",
       },
     ],
@@ -2160,18 +2160,16 @@ if (showHistory) {
                     </div>
 
                     <div className="text-sm text-gray-600 space-y-1">
-                      {displayTemplate.exercises
-                        .slice(0, 3)
-                        .map((exercise, index) => (
-                          <div key={index} className="flex justify-between">
-                            <span>{exercise.name}</span>
-                            <span className="font-mono text-xs text-gray-500">
-                              {exercise.sets} × {exercise.reps} @{" "}
-                              {convertWeight(exercise.weight)}
-                              {getWeightUnit()}
-                            </span>
-                          </div>
-                        ))}
+  {displayTemplate.exercises
+    .slice(0, 3)
+    .map((exercise, index) => (
+      <div key={index} className="flex justify-between items-center">
+        <span className="truncate pr-2 flex-1">{exercise.name}</span>
+        <span className="font-mono text-xs text-gray-500 whitespace-nowrap text-right min-w-0 flex-shrink-0">
+          {exercise.sets} × {exercise.reps} @ {convertWeight(exercise.weight)} {getWeightUnit()}
+        </span>
+      </div>
+    ))}
                       {displayTemplate.exercises.length > 3 && (
                         <div className="text-xs text-gray-400 italic">
                           +{displayTemplate.exercises.length - 3} more exercise
