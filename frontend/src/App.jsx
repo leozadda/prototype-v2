@@ -872,107 +872,506 @@ const WorkoutTracker = () => {
 
   const exerciseDatabase = [
     // Chest
-    { name: "Push-ups", muscle: "chest", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Bench Press", muscle: "chest", equipment: "barbell", defaultWeight: 135 },
-    { name: "Incline Bench Press", muscle: "chest", equipment: "barbell", defaultWeight: 115 },
-    { name: "Dumbbell Bench Press", muscle: "chest", equipment: "dumbbell", defaultWeight: 70 },
-    { name: "Incline Dumbbell Press", muscle: "chest", equipment: "dumbbell", defaultWeight: 60 },
-    { name: "Chest Flyes", muscle: "chest", equipment: "dumbbell", defaultWeight: 25 },
-    { name: "Dips", muscle: "chest", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Cable Chest Flyes", muscle: "chest", equipment: "cable", defaultWeight: 30 },
-  
+    {
+      name: "Push-ups",
+      muscle: "chest",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Bench Press",
+      muscle: "chest",
+      equipment: "barbell",
+      defaultWeight: 135,
+    },
+    {
+      name: "Incline Bench Press",
+      muscle: "chest",
+      equipment: "barbell",
+      defaultWeight: 115,
+    },
+    {
+      name: "Dumbbell Bench Press",
+      muscle: "chest",
+      equipment: "dumbbell",
+      defaultWeight: 70,
+    },
+    {
+      name: "Incline Dumbbell Press",
+      muscle: "chest",
+      equipment: "dumbbell",
+      defaultWeight: 60,
+    },
+    {
+      name: "Chest Flyes",
+      muscle: "chest",
+      equipment: "dumbbell",
+      defaultWeight: 25,
+    },
+    {
+      name: "Dips",
+      muscle: "chest",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Cable Chest Flyes",
+      muscle: "chest",
+      equipment: "cable",
+      defaultWeight: 30,
+    },
+
     // Back
-    { name: "Pull-ups", muscle: "back", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Chin-ups", muscle: "back", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Lat Pulldowns", muscle: "back", equipment: "cable", defaultWeight: 120 },
-    { name: "Seated Cable Rows", muscle: "back", equipment: "cable", defaultWeight: 100 },
-    { name: "Barbell Rows", muscle: "back", equipment: "barbell", defaultWeight: 115 },
-    { name: "Dumbbell Rows", muscle: "back", equipment: "dumbbell", defaultWeight: 50 },
-    { name: "T-Bar Rows", muscle: "back", equipment: "barbell", defaultWeight: 90 },
-    { name: "Face Pulls", muscle: "back", equipment: "cable", defaultWeight: 40 },
-    { name: "Deadlifts", muscle: "back", equipment: "barbell", defaultWeight: 185 },
-    { name: "Romanian Deadlifts", muscle: "back", equipment: "barbell", defaultWeight: 155 },
-    { name: "Shrugs", muscle: "back", equipment: "dumbbell", defaultWeight: 60 },
-  
+    {
+      name: "Pull-ups",
+      muscle: "back",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Chin-ups",
+      muscle: "back",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Lat Pulldowns",
+      muscle: "back",
+      equipment: "cable",
+      defaultWeight: 120,
+    },
+    {
+      name: "Seated Cable Rows",
+      muscle: "back",
+      equipment: "cable",
+      defaultWeight: 100,
+    },
+    {
+      name: "Barbell Rows",
+      muscle: "back",
+      equipment: "barbell",
+      defaultWeight: 115,
+    },
+    {
+      name: "Dumbbell Rows",
+      muscle: "back",
+      equipment: "dumbbell",
+      defaultWeight: 50,
+    },
+    {
+      name: "T-Bar Rows",
+      muscle: "back",
+      equipment: "barbell",
+      defaultWeight: 90,
+    },
+    {
+      name: "Face Pulls",
+      muscle: "back",
+      equipment: "cable",
+      defaultWeight: 40,
+    },
+    {
+      name: "Deadlifts",
+      muscle: "back",
+      equipment: "barbell",
+      defaultWeight: 185,
+    },
+    {
+      name: "Romanian Deadlifts",
+      muscle: "back",
+      equipment: "barbell",
+      defaultWeight: 155,
+    },
+    {
+      name: "Shrugs",
+      muscle: "back",
+      equipment: "dumbbell",
+      defaultWeight: 60,
+    },
+
     // Shoulders
-    { name: "Overhead Press", muscle: "shoulders", equipment: "barbell", defaultWeight: 85 },
-    { name: "Dumbbell Shoulder Press", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 40 },
-    { name: "Seated Dumbbell Press", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 45 },
-    { name: "Lateral Raises", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 15 },
-    { name: "Front Raises", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 20 },
-    { name: "Rear Delt Flyes", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 15 },
-    { name: "Upright Rows", muscle: "shoulders", equipment: "barbell", defaultWeight: 65 },
-    { name: "Arnold Press", muscle: "shoulders", equipment: "dumbbell", defaultWeight: 35 },
-    { name: "Pike Push-ups", muscle: "shoulders", equipment: "bodyweight", defaultWeight: 180 },
-  
+    {
+      name: "Overhead Press",
+      muscle: "shoulders",
+      equipment: "barbell",
+      defaultWeight: 85,
+    },
+    {
+      name: "Dumbbell Shoulder Press",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 40,
+    },
+    {
+      name: "Seated Dumbbell Press",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 45,
+    },
+    {
+      name: "Lateral Raises",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 15,
+    },
+    {
+      name: "Front Raises",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 20,
+    },
+    {
+      name: "Rear Delt Flyes",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 15,
+    },
+    {
+      name: "Upright Rows",
+      muscle: "shoulders",
+      equipment: "barbell",
+      defaultWeight: 65,
+    },
+    {
+      name: "Arnold Press",
+      muscle: "shoulders",
+      equipment: "dumbbell",
+      defaultWeight: 35,
+    },
+    {
+      name: "Pike Push-ups",
+      muscle: "shoulders",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+
     // Arms - Biceps
-    { name: "Barbell Curls", muscle: "biceps", equipment: "barbell", defaultWeight: 65 },
-    { name: "Dumbbell Curls", muscle: "biceps", equipment: "dumbbell", defaultWeight: 25 },
-    { name: "Hammer Curls", muscle: "biceps", equipment: "dumbbell", defaultWeight: 30 },
-    { name: "Preacher Curls", muscle: "biceps", equipment: "barbell", defaultWeight: 50 },
-    { name: "Cable Curls", muscle: "biceps", equipment: "cable", defaultWeight: 60 },
-    { name: "Concentration Curls", muscle: "biceps", equipment: "dumbbell", defaultWeight: 20 },
-    { name: "21s Bicep Curls", muscle: "biceps", equipment: "barbell", defaultWeight: 45 },
-  
+    {
+      name: "Barbell Curls",
+      muscle: "biceps",
+      equipment: "barbell",
+      defaultWeight: 65,
+    },
+    {
+      name: "Dumbbell Curls",
+      muscle: "biceps",
+      equipment: "dumbbell",
+      defaultWeight: 25,
+    },
+    {
+      name: "Hammer Curls",
+      muscle: "biceps",
+      equipment: "dumbbell",
+      defaultWeight: 30,
+    },
+    {
+      name: "Preacher Curls",
+      muscle: "biceps",
+      equipment: "barbell",
+      defaultWeight: 50,
+    },
+    {
+      name: "Cable Curls",
+      muscle: "biceps",
+      equipment: "cable",
+      defaultWeight: 60,
+    },
+    {
+      name: "Concentration Curls",
+      muscle: "biceps",
+      equipment: "dumbbell",
+      defaultWeight: 20,
+    },
+    {
+      name: "21s Bicep Curls",
+      muscle: "biceps",
+      equipment: "barbell",
+      defaultWeight: 45,
+    },
+
     // Arms - Triceps
-    { name: "Tricep Dips", muscle: "triceps", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Close-Grip Bench Press", muscle: "triceps", equipment: "barbell", defaultWeight: 115 },
-    { name: "Overhead Tricep Extension", muscle: "triceps", equipment: "dumbbell", defaultWeight: 35 },
-    { name: "Tricep Pushdowns", muscle: "triceps", equipment: "cable", defaultWeight: 60 },
-    { name: "Diamond Push-ups", muscle: "triceps", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Skull Crushers", muscle: "triceps", equipment: "barbell", defaultWeight: 55 },
-    { name: "Dumbbell Kickbacks", muscle: "triceps", equipment: "dumbbell", defaultWeight: 15 },
-  
+    {
+      name: "Tricep Dips",
+      muscle: "triceps",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Close-Grip Bench Press",
+      muscle: "triceps",
+      equipment: "barbell",
+      defaultWeight: 115,
+    },
+    {
+      name: "Overhead Tricep Extension",
+      muscle: "triceps",
+      equipment: "dumbbell",
+      defaultWeight: 35,
+    },
+    {
+      name: "Tricep Pushdowns",
+      muscle: "triceps",
+      equipment: "cable",
+      defaultWeight: 60,
+    },
+    {
+      name: "Diamond Push-ups",
+      muscle: "triceps",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Skull Crushers",
+      muscle: "triceps",
+      equipment: "barbell",
+      defaultWeight: 55,
+    },
+    {
+      name: "Dumbbell Kickbacks",
+      muscle: "triceps",
+      equipment: "dumbbell",
+      defaultWeight: 15,
+    },
+
     // Legs - Quads
-    { name: "Squats", muscle: "quads", equipment: "barbell", defaultWeight: 185 },
-    { name: "Front Squats", muscle: "quads", equipment: "barbell", defaultWeight: 135 },
-    { name: "Goblet Squats", muscle: "quads", equipment: "dumbbell", defaultWeight: 50 },
-    { name: "Leg Press", muscle: "quads", equipment: "machine", defaultWeight: 200 },
-    { name: "Bulgarian Split Squats", muscle: "quads", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Lunges", muscle: "quads", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Walking Lunges", muscle: "quads", equipment: "dumbbell", defaultWeight: 30 },
-    { name: "Leg Extensions", muscle: "quads", equipment: "machine", defaultWeight: 100 },
-    { name: "Step-ups", muscle: "quads", equipment: "bodyweight", defaultWeight: 180 },
-  
+    {
+      name: "Squats",
+      muscle: "quads",
+      equipment: "barbell",
+      defaultWeight: 185,
+    },
+    {
+      name: "Front Squats",
+      muscle: "quads",
+      equipment: "barbell",
+      defaultWeight: 135,
+    },
+    {
+      name: "Goblet Squats",
+      muscle: "quads",
+      equipment: "dumbbell",
+      defaultWeight: 50,
+    },
+    {
+      name: "Leg Press",
+      muscle: "quads",
+      equipment: "machine",
+      defaultWeight: 200,
+    },
+    {
+      name: "Bulgarian Split Squats",
+      muscle: "quads",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Lunges",
+      muscle: "quads",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Walking Lunges",
+      muscle: "quads",
+      equipment: "dumbbell",
+      defaultWeight: 30,
+    },
+    {
+      name: "Leg Extensions",
+      muscle: "quads",
+      equipment: "machine",
+      defaultWeight: 100,
+    },
+    {
+      name: "Step-ups",
+      muscle: "quads",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+
     // Legs - Hamstrings
-    { name: "Romanian Deadlifts", muscle: "hamstrings", equipment: "barbell", defaultWeight: 155 },
-    { name: "Leg Curls", muscle: "hamstrings", equipment: "machine", defaultWeight: 80 },
-    { name: "Stiff Leg Deadlifts", muscle: "hamstrings", equipment: "dumbbell", defaultWeight: 60 },
-    { name: "Good Mornings", muscle: "hamstrings", equipment: "barbell", defaultWeight: 95 },
-    { name: "Single Leg Deadlifts", muscle: "hamstrings", equipment: "dumbbell", defaultWeight: 25 },
-  
+    {
+      name: "Romanian Deadlifts",
+      muscle: "hamstrings",
+      equipment: "barbell",
+      defaultWeight: 155,
+    },
+    {
+      name: "Leg Curls",
+      muscle: "hamstrings",
+      equipment: "machine",
+      defaultWeight: 80,
+    },
+    {
+      name: "Stiff Leg Deadlifts",
+      muscle: "hamstrings",
+      equipment: "dumbbell",
+      defaultWeight: 60,
+    },
+    {
+      name: "Good Mornings",
+      muscle: "hamstrings",
+      equipment: "barbell",
+      defaultWeight: 95,
+    },
+    {
+      name: "Single Leg Deadlifts",
+      muscle: "hamstrings",
+      equipment: "dumbbell",
+      defaultWeight: 25,
+    },
+
     // Glutes
-    { name: "Hip Thrusts", muscle: "glutes", equipment: "barbell", defaultWeight: 135 },
-    { name: "Glute Bridges", muscle: "glutes", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Romanian Deadlifts", muscle: "glutes", equipment: "barbell", defaultWeight: 155 },
-    { name: "Sumo Deadlifts", muscle: "glutes", equipment: "barbell", defaultWeight: 185 },
-    { name: "Clamshells", muscle: "glutes", equipment: "bodyweight", defaultWeight: 180 },
-  
+    {
+      name: "Hip Thrusts",
+      muscle: "glutes",
+      equipment: "barbell",
+      defaultWeight: 135,
+    },
+    {
+      name: "Glute Bridges",
+      muscle: "glutes",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Romanian Deadlifts",
+      muscle: "glutes",
+      equipment: "barbell",
+      defaultWeight: 155,
+    },
+    {
+      name: "Sumo Deadlifts",
+      muscle: "glutes",
+      equipment: "barbell",
+      defaultWeight: 185,
+    },
+    {
+      name: "Clamshells",
+      muscle: "glutes",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+
     // Calves
-    { name: "Calf Raises", muscle: "calves", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Seated Calf Raises", muscle: "calves", equipment: "machine", defaultWeight: 90 },
-    { name: "Donkey Calf Raises", muscle: "calves", equipment: "machine", defaultWeight: 120 },
-  
+    {
+      name: "Calf Raises",
+      muscle: "calves",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Seated Calf Raises",
+      muscle: "calves",
+      equipment: "machine",
+      defaultWeight: 90,
+    },
+    {
+      name: "Donkey Calf Raises",
+      muscle: "calves",
+      equipment: "machine",
+      defaultWeight: 120,
+    },
+
     // Abs/Core
-    { name: "Planks", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Crunches", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Russian Twists", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Bicycle Crunches", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Mountain Climbers", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Dead Bug", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Hanging Leg Raises", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Ab Wheel Rollouts", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Leg Raises", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Side Planks", muscle: "abs", equipment: "bodyweight", defaultWeight: 180 },
-  
+    {
+      name: "Planks",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Crunches",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Russian Twists",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Bicycle Crunches",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Mountain Climbers",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Dead Bug",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Hanging Leg Raises",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Ab Wheel Rollouts",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Leg Raises",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Side Planks",
+      muscle: "abs",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+
     // Compound/Full Body
-    { name: "Deadlifts", muscle: "full body", equipment: "barbell", defaultWeight: 225 },
-    { name: "Clean and Press", muscle: "full body", equipment: "barbell", defaultWeight: 95 },
-    { name: "Thrusters", muscle: "full body", equipment: "dumbbell", defaultWeight: 35 },
-    { name: "Burpees", muscle: "full body", equipment: "bodyweight", defaultWeight: 180 },
-    { name: "Turkish Get-ups", muscle: "full body", equipment: "dumbbell", defaultWeight: 25 },
-    { name: "Man Makers", muscle: "full body", equipment: "dumbbell", defaultWeight: 20 },
-  
+    {
+      name: "Deadlifts",
+      muscle: "full body",
+      equipment: "barbell",
+      defaultWeight: 225,
+    },
+    {
+      name: "Clean and Press",
+      muscle: "full body",
+      equipment: "barbell",
+      defaultWeight: 95,
+    },
+    {
+      name: "Thrusters",
+      muscle: "full body",
+      equipment: "dumbbell",
+      defaultWeight: 35,
+    },
+    {
+      name: "Burpees",
+      muscle: "full body",
+      equipment: "bodyweight",
+      defaultWeight: 180,
+    },
+    {
+      name: "Turkish Get-ups",
+      muscle: "full body",
+      equipment: "dumbbell",
+      defaultWeight: 25,
+    },
+    {
+      name: "Man Makers",
+      muscle: "full body",
+      equipment: "dumbbell",
+      defaultWeight: 20,
+    },
   ];
 
   const getMuscleEmoji = (muscle) => {
@@ -1507,7 +1906,12 @@ const WorkoutTracker = () => {
                     Delete
                   </button>
                   <button
-                    onClick={() => setDeleteConfirmation(null)}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeleteConfirmation(null);
+                    }}
                     className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
                   >
                     Cancel
@@ -2119,8 +2523,7 @@ const WorkoutTracker = () => {
                             <span className="pr-2">{exercise.name}</span>
                             <span className="font-mono text-xs text-gray-500 text-right">
                               {exercise.sets} × {exercise.reps} @{" "}
-                              {convertWeight(exercise.weight)}{" "}
-                              {getWeightUnit()}
+                              {convertWeight(exercise.weight)} {getWeightUnit()}
                             </span>
                           </div>
                         ))}
