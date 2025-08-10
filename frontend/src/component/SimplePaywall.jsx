@@ -68,18 +68,18 @@ const SimplePaywall = () => {
   };
 
   const yesReasons = [
-    "Finally! Something simple that just works.",
-    "I hate tracking workouts but this is easy.",
+    "It's a good concept with potential.",
+    "I dislike other workout tracking apps but this is easy.",
     "Worth it to see if I'm actually getting stronger.",
     "Cheaper than a personal trainer session.",
     "I want to support small developers.",
   ];
 
   const noReasons = [
-    "I don't want to pay for apps.",
-    "Missing key features I need.",
+    "I only use free apps.",
+    "Missing some features I need.",
     "Already using something else.",
-    "Don't trust early/prototype products.",
+    "It has too many problems and bugs.",
     "Price is too high for what it does.",
   ];
 
@@ -93,7 +93,7 @@ const SimplePaywall = () => {
               Quick question!
             </h2>
             <p className="text-gray-600">
-              Would you pay <span className="font-medium">$10 once</span> to
+              Would you pay <span className="font-medium">$10 once</span> for the beta version to
               support us?
             </p>
 
