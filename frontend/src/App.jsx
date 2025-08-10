@@ -1895,38 +1895,48 @@ const WorkoutTracker = () => {
             )}
           </div>
 
+
+
+
+
+
           {deleteConfirmation && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-                <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
-                <p className="text-gray-600 mb-6">
-                  Are you sure? It will be gone forever.
-                </p>
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => {
-                      deleteWorkout(deleteConfirmation);
-                      setDeleteConfirmation(null);
-                    }}
-                    className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDeleteConfirmation(null);
-                    }}
-                    className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+      <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
+      <p className="text-gray-600 mb-2">Are you sure? It will be gone forever.</p>
+      <p className="text-sm text-red-600 mb-4">DEBUG: deleteConfirmation = {deleteConfirmation}</p>
+      <div className="flex space-x-3">
+        <button
+          type="button"
+          onClick={() => {
+            console.log('Delete confirmed');
+            deleteWorkout(deleteConfirmation);
+            setDeleteConfirmation(null);
+          }}
+          className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
+        >
+          Delete
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            console.log('Delete cancelled');
+            setDeleteConfirmation(null);
+          }}
+          className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+          
         </div>
       </div>
     );
