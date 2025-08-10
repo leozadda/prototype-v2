@@ -1859,41 +1859,27 @@ const WorkoutTracker = () => {
                     </div>
                   </div>
 
-                  {/* Separate button area - Safari iOS friendly */}
-                  <div
-                    className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl"
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                  >
-                    <div
-                      className="flex justify-end"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.nativeEvent.stopImmediatePropagation();
-                          setDeleteConfirmation(workout.id);
-                        }}
-                        onTouchEnd={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                        }}
-                        className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
-                        style={{
-                          WebkitAppearance: "none",
-                          WebkitTapHighlightColor: "transparent",
-                          touchAction: "manipulation",
-                          cursor: "pointer",
-                        }}
-                        title="Delete workout"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+{/* Separate button area - Safari iOS friendly */}
+<div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
+  <div className="flex justify-end">
+    <button
+      type="button"
+      onClick={() => setDeleteConfirmation(workout.id)}
+      className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
+      style={{
+        WebkitAppearance: "none",
+        WebkitTapHighlightColor: "transparent",
+        touchAction: "manipulation",
+        cursor: "pointer",
+      }}
+      title="Delete workout"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</div>
+
+
                 </div>
               ))}
 
