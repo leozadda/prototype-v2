@@ -1807,6 +1807,7 @@ const WorkoutTracker = () => {
                 <div
                   key={index}
                   className="bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow"
+                  style={{ touchAction: "manipulation" }}
                 >
                   {/* Main workout content - NOT clickable */}
                   <div className="p-6">
@@ -1863,7 +1864,16 @@ const WorkoutTracker = () => {
                     <div className="flex justify-end">
                       <button
                         type="button"
-                        onClick={() => setDeleteConfirmation(workout.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.nativeEvent.stopImmediatePropagation();
+                          setDeleteConfirmation(workout.id);
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
                         className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
                         style={{
                           WebkitAppearance: "none",
