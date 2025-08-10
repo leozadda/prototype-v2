@@ -1860,8 +1860,15 @@ const WorkoutTracker = () => {
                   </div>
 
                   {/* Separate button area - Safari iOS friendly */}
-                  <div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
-                    <div className="flex justify-end">
+                  <div
+                    className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl"
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className="flex justify-end"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         type="button"
                         onClick={(e) => {
