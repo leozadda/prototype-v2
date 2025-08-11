@@ -182,7 +182,7 @@ const WorkoutTracker = () => {
   const [streakNotification, setStreakNotification] = useState(null);
   const [useKg, setUseKg] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
-const [forceRender, setForceRender] = useState(0);
+  const [forceRender, setForceRender] = useState(0);
   const [inputValues, setInputValues] = useState({});
   const [firstLoginDate, setFirstLoginDate] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -1787,7 +1787,7 @@ const [forceRender, setForceRender] = useState(0);
               <h1 className="text-2xl font-semibold text-gray-900">History</h1>
               <button
                 onClick={() => exportUserData(db, workouts)}
-                className="py-1 px-2 bg-gray-100 text-gray-400 hover:text-gray-200 hover:bg-gray-100 rounded-lg transition-colors"
+                className="py-1 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4" />
               </button>
@@ -1860,15 +1860,16 @@ const [forceRender, setForceRender] = useState(0);
                     </div>
                   </div>
 
-{/* Separate button area - Safari iOS friendly */}
-<div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
-  <div className="flex justify-end">
-  <button
-  type="button"
-  onClick={() => {
-    const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
-    modal.innerHTML = `
+                  {/* Separate button area - Safari iOS friendly */}
+                  <div className="border-t border-gray-100 px-6 py-3 bg-gray-50 rounded-b-xl">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const modal = document.createElement("div");
+                          modal.className =
+                            "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50";
+                          modal.innerHTML = `
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
         <h3 class="text-lg font-semibold mb-2">Delete Workout</h3>
         <p class="text-gray-600 mb-6">Are you sure? It will be gone forever.</p>
@@ -1878,33 +1879,33 @@ const [forceRender, setForceRender] = useState(0);
         </div>
       </div>
     `;
-    
-    document.body.appendChild(modal);
-    
-    document.getElementById('confirmDelete').onclick = () => {
-      deleteWorkout(workout.id);
-      document.body.removeChild(modal);
-    };
-    
-    document.getElementById('cancelDelete').onclick = () => {
-      document.body.removeChild(modal);
-    };
-  }}
-  className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
-  style={{
-    WebkitAppearance: "none",
-    WebkitTapHighlightColor: "transparent",
-    touchAction: "manipulation",
-    cursor: "pointer",
-  }}
-  title="Delete workout"
->
-  <Trash2 className="w-4 h-4" />
-</button>
-  </div>
-</div>
 
+                          document.body.appendChild(modal);
 
+                          document.getElementById("confirmDelete").onclick =
+                            () => {
+                              deleteWorkout(workout.id);
+                              document.body.removeChild(modal);
+                            };
+
+                          document.getElementById("cancelDelete").onclick =
+                            () => {
+                              document.body.removeChild(modal);
+                            };
+                        }}
+                        className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
+                        style={{
+                          WebkitAppearance: "none",
+                          WebkitTapHighlightColor: "transparent",
+                          touchAction: "manipulation",
+                          cursor: "pointer",
+                        }}
+                        title="Delete workout"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
 
@@ -1916,44 +1917,38 @@ const [forceRender, setForceRender] = useState(0);
             )}
           </div>
 
-
-
-
-
-
           {(deleteConfirmation || forceRender > 0) && deleteConfirmation && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-      <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
-      <p className="text-gray-600 mb-2">Are you sure? It will be gone forever.</p>
-      <p className="text-sm text-red-600 mb-4">DEBUG: deleteConfirmation = {deleteConfirmation}</p>
-      <div className="flex space-x-3">
-        <button
-          type="button"
-          onClick={() => {
-            deleteWorkout(deleteConfirmation);
-            setDeleteConfirmation(null);
-          }}
-          className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
-        >
-          Delete
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeleteConfirmation(null)}
-          className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
-          
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+                <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
+                <p className="text-gray-600 mb-2">
+                  Are you sure? It will be gone forever.
+                </p>
+                <p className="text-sm text-red-600 mb-4">
+                  DEBUG: deleteConfirmation = {deleteConfirmation}
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteWorkout(deleteConfirmation);
+                      setDeleteConfirmation(null);
+                    }}
+                    className="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium hover:bg-red-100 transition-colors"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmation(null)}
+                    className="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -2333,7 +2328,7 @@ const [forceRender, setForceRender] = useState(0);
           {/* Exercise Picker Modal */}
           {showExercisePicker && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
+<div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md h-[500px] overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Add Exercise</h3>
@@ -2358,9 +2353,9 @@ const [forceRender, setForceRender] = useState(0);
                 </div>
 
                 <div
-                  className="overflow-y-auto"
-                  style={{ maxHeight: "calc(80vh - 140px)" }}
-                >
+  className="overflow-y-auto flex-1"
+  style={{ minHeight: "300px" }}
+>
                   {getFilteredExercises().map((exercise, index) => (
                     <button
                       key={index}
