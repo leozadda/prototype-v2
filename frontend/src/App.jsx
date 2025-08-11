@@ -182,6 +182,7 @@ const WorkoutTracker = () => {
   const [streakNotification, setStreakNotification] = useState(null);
   const [useKg, setUseKg] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState(null);
+const [forceRender, setForceRender] = useState(0);
   const [inputValues, setInputValues] = useState({});
   const [firstLoginDate, setFirstLoginDate] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -1865,9 +1866,8 @@ const WorkoutTracker = () => {
   <button
   type="button"
   onClick={() => {
-    setTimeout(() => {
-      setDeleteConfirmation(workout.id);
-    }, 0);
+    setDeleteConfirmation(workout.id);
+    setForceRender(prev => prev + 1);
   }}
   className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
   style={{
@@ -1900,7 +1900,7 @@ const WorkoutTracker = () => {
 
 
 
-          {deleteConfirmation && (
+          {(deleteConfirmation || forceRender > 0) && deleteConfirmation && (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
       <h3 className="text-lg font-semibold mb-2">Delete Workout</h3>
