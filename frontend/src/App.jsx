@@ -1959,7 +1959,7 @@ const WorkoutTracker = () => {
     const { streak } = workoutResult;
 
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-start justify-center py-8">
         <div className="max-w-md mx-auto p-6">
           <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
             {/* Add this in the Results View after the existing streak congratulations */}
