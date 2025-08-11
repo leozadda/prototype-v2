@@ -672,16 +672,26 @@ const WorkoutTracker = () => {
     return () => clearInterval(interval);
   }, [firstLoginDate, isSubscribed, showPaywall]);
 
+
+
+
+
   useEffect(() => {
     if (workouts.length > 0) {
       const insights = getProgressInsights(workouts, useKg, convertWeight);
       if (insights?.primaryIssue && workouts.length > 0) {
+        // ADD THIS CHECK - Don't show suggestions for zero weight/reps exercises
+        if (insights.primaryIssue.currentWeight === 0 || insights.primaryIssue.currentReps === 0) {
+          setProgressInsights(null);
+          return;
+        }
+        
         // Find the most recent workout that contains this exercise to determine the template
         const exerciseName = insights.primaryIssue.exerciseName;
         const recentWorkoutsWithExercise = workouts
           .filter((w) => w.exercises?.some((ex) => ex.name === exerciseName))
           .sort((a, b) => new Date(b.date) - new Date(a.date));
-
+  
         if (recentWorkoutsWithExercise.length > 0) {
           insights.primaryIssue.templateKey =
             recentWorkoutsWithExercise[0].type;
@@ -690,6 +700,9 @@ const WorkoutTracker = () => {
       setProgressInsights(insights);
     }
   }, [workouts]);
+
+
+
 
   const unlockRealTemplates = async () => {
     // Remove beginner template from current templates
