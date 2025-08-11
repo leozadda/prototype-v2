@@ -1781,7 +1781,7 @@ const WorkoutTracker = () => {
   if (showHistory) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-2xl mx-auto p-6">
+        <div className="max-w-2xl sm:max-w-4xl lg:max-w-6xl mx-auto p-6">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-3">
               <h1 className="text-2xl font-semibold text-gray-900">History</h1>
@@ -1960,7 +1960,7 @@ const WorkoutTracker = () => {
 
     return (
 <div className="min-h-screen bg-gray-50 flex justify-center">
-<div className="max-w-md mx-auto p-6 self-center">
+<div className="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto p-6 self-center">
           <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
             {/* Add this in the Results View after the existing streak congratulations */}
 
@@ -2075,7 +2075,7 @@ const WorkoutTracker = () => {
   if (currentWorkout) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-2xl mx-auto px-2 py-8">
+        <div className="max-w-2xl sm:max-w-4xl lg:max-w-6xl mx-auto px-2 py-8">
           <div className="flex items-center justify-between mb-8 px-5">
             <h1 className="text-2xl font-semibold text-gray-900 ">
               {currentWorkout.templateName}
@@ -2407,7 +2407,7 @@ const WorkoutTracker = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-2xl sm:max-w-4xl lg:max-w-6xl mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-sm font-medium text-gray-500 uppercase tracking-wider">
