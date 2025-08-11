@@ -1866,8 +1866,29 @@ const [forceRender, setForceRender] = useState(0);
   <button
   type="button"
   onClick={() => {
-    setDeleteConfirmation(workout.id);
-    setForceRender(prev => prev + 1);
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+    modal.innerHTML = `
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <h3 class="text-lg font-semibold mb-2">Delete Workout</h3>
+        <p class="text-gray-600 mb-6">Are you sure? It will be gone forever.</p>
+        <div class="flex space-x-3">
+          <button id="confirmDelete" class="flex-1 bg-red-50 border border-red-200 text-red-600 py-3 px-4 rounded-xl font-medium">Delete</button>
+          <button id="cancelDelete" class="flex-1 bg-white border border-gray-300 text-gray-600 py-3 px-4 rounded-xl font-medium">Cancel</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    document.getElementById('confirmDelete').onclick = () => {
+      deleteWorkout(workout.id);
+      document.body.removeChild(modal);
+    };
+    
+    document.getElementById('cancelDelete').onclick = () => {
+      document.body.removeChild(modal);
+    };
   }}
   className="inline-flex items-center justify-center w-10 h-10 text-gray-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors border-0 bg-transparent"
   style={{
