@@ -528,6 +528,10 @@ const WorkoutTracker = () => {
             value: 10.0,
             currency: "USD",
           });
+          // Add Clarity custom event
+          if (typeof clarity === "function") {
+            clarity("event", "purchase");
+          }
 
           await database.saveSetting("isSubscribed", true);
           // Clean up URL immediately
@@ -833,6 +837,10 @@ const WorkoutTracker = () => {
       template_name: template.name,
       exercise_count: exercises.length,
     });
+    // Add Clarity custom event
+    if (typeof clarity === "function") {
+      clarity("event", "workout_start");
+    }
   };
 
   // Find this function in your code:
@@ -1434,6 +1442,10 @@ const WorkoutTracker = () => {
     };
 
     gtag("event", "select_exercise", { exercise_name: exerciseName });
+    // Add Clarity custom event
+    if (typeof clarity === "function") {
+      clarity("event", "select_exercise");
+    }
 
     setCurrentWorkout((prev) => ({
       ...prev,
@@ -1526,6 +1538,10 @@ const WorkoutTracker = () => {
     gtag("event", "template_create", {
       template_name: newTemplateName,
     });
+    // Add Clarity custom event
+    if (typeof clarity === "function") {
+      clarity("event", "template_create");
+    }
 
     setShowSaveTemplate(false);
     setNewTemplateName("");
@@ -1600,6 +1616,10 @@ const WorkoutTracker = () => {
       exercise_count: currentWorkout.exercises.length,
       value: currentVolume,
     });
+    // Add Clarity custom event
+    if (typeof clarity === "function") {
+      clarity("event", "workout_complete");
+    }
 
     // Save last used settings for this template
     if (db) {
@@ -1822,6 +1842,10 @@ const WorkoutTracker = () => {
                 onClick={() => {
                   exportUserData(db, workouts);
                   gtag("event", "export_data");
+                  // Add Clarity custom event
+                  if (typeof clarity === "function") {
+                    clarity("event", "export_data");
+                  }
                 }}
                 className="py-1 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -1832,6 +1856,10 @@ const WorkoutTracker = () => {
               onClick={() => {
                 setShowHistory(false);
                 gtag("event", "exit_history");
+                // Add Clarity custom event
+                if (typeof clarity === "function") {
+                  clarity("event", "exit_history");
+                }
               }}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
@@ -1926,6 +1954,10 @@ const WorkoutTracker = () => {
                               gtag("event", "delete_workout", {
                                 template_name: workout.templateName,
                               });
+                              // Add Clarity custom event
+                              if (typeof clarity === "function") {
+                                clarity("event", "delete_workout");
+                              }
                               document.body.removeChild(modal);
                             };
 
@@ -2069,6 +2101,10 @@ const WorkoutTracker = () => {
                 onClick={() => {
                   resetApp();
                   gtag("event", "exit_results");
+                  // Add Clarity custom event
+                  if (typeof clarity === "function") {
+                    clarity("event", "exit_results");
+                  }
                 }}
                 className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium"
               >
@@ -2128,6 +2164,10 @@ const WorkoutTracker = () => {
               onClick={() => {
                 setUseKg(!useKg);
                 gtag("event", "toggle_units", { unit: useKg ? "lbs" : "kg" });
+                // Add Clarity custom event
+                if (typeof clarity === "function") {
+                  clarity("event", "toggle_units");
+                }
               }}
               className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${
                 useKg ? "bg-blue-500" : "bg-green-500"
@@ -2169,6 +2209,10 @@ const WorkoutTracker = () => {
                         gtag("event", "duplicate_exercise", {
                           exercise_name: exercise.name,
                         });
+                        // Add Clarity custom event
+                        if (typeof clarity === "function") {
+                          clarity("event", "duplicate_exercise");
+                        }
                       }}
                       className="text-blue-600 hover:text-blue-800 p-3 sm:p-2 hover:bg-blue-50 rounded-lg transition-colors"
                     >
@@ -2180,6 +2224,10 @@ const WorkoutTracker = () => {
                         gtag("event", "delete_exercise", {
                           exercise_name: exercise.name,
                         });
+                        // Add Clarity custom event
+                        if (typeof clarity === "function") {
+                          clarity("event", "delete_exercise");
+                        }
                       }}
                       className="text-red-600 hover:text-red-800 p-3 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
                       title="Remove exercise"
@@ -2361,6 +2409,10 @@ const WorkoutTracker = () => {
               onClick={() => {
                 setShowExercisePicker(true);
                 gtag("event", "add_exercise");
+                // Add Clarity custom event
+                if (typeof clarity === "function") {
+                  clarity("event", "add_exercise");
+                }
               }}
               className="w-full bg-blue-50 text-blue-600 py-4 px-6 rounded-xl font-medium hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-200 flex items-center justify-center"
             >
@@ -2373,6 +2425,10 @@ const WorkoutTracker = () => {
                 onClick={() => {
                   setCurrentWorkout(null);
                   gtag("event", "workout_cancel");
+                  // Add Clarity custom event
+                  if (typeof clarity === "function") {
+                    clarity("event", "workout_cancel");
+                  }
                 }}
                 className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
               >
@@ -2498,6 +2554,10 @@ const WorkoutTracker = () => {
             onClick={() => {
               setShowHistory(true);
               gtag("event", "view_progress");
+              // Add Clarity custom event
+              if (typeof clarity === "function") {
+                clarity("event", "view_progress");
+              }
             }}
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -2642,6 +2702,10 @@ const WorkoutTracker = () => {
                           gtag("event", "pin_template", {
                             template_name: template.name,
                           });
+                          // Add Clarity custom event
+                          if (typeof clarity === "function") {
+                            clarity("event", "pin_template");
+                          }
                         }}
                         className={`p-1 rounded-lg transition-colors ${
                           isPinned
@@ -2661,6 +2725,10 @@ const WorkoutTracker = () => {
                             gtag("event", "delete_template", {
                               template_name: template.name,
                             });
+                            // Add Clarity custom event
+                            if (typeof clarity === "function") {
+                              clarity("event", "delete_template");
+                            }
                           }}
                           className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete template"
