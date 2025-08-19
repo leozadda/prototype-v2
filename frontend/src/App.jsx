@@ -522,6 +522,13 @@ const WorkoutTracker = () => {
         if (hasSuccessParam) {
           setIsSubscribed(true);
           setShowPaywall(false);
+
+          gtag("event", "purchase", {
+            transaction_id: Date.now().toString(),
+            value: 10.0,
+            currency: "USD",
+          });
+
           await database.saveSetting("isSubscribed", true);
           // Clean up URL immediately
           window.history.replaceState(
@@ -672,10 +679,6 @@ const WorkoutTracker = () => {
     return () => clearInterval(interval);
   }, [firstLoginDate, isSubscribed, showPaywall]);
 
-
-
-
-
   useEffect(() => {
     if (workouts.length > 0) {
       const insights = getProgressInsights(workouts, useKg, convertWeight);
@@ -685,7 +688,7 @@ const WorkoutTracker = () => {
         const recentWorkoutsWithExercise = workouts
           .filter((w) => w.exercises?.some((ex) => ex.name === exerciseName))
           .sort((a, b) => new Date(b.date) - new Date(a.date));
-  
+
         if (recentWorkoutsWithExercise.length > 0) {
           const templateKey = recentWorkoutsWithExercise[0].type;
           // Don't show suggestions for beginner template
@@ -699,9 +702,6 @@ const WorkoutTracker = () => {
       setProgressInsights(insights);
     }
   }, [workouts]);
-
-
-  
 
   const unlockRealTemplates = async () => {
     // Remove beginner template from current templates
@@ -828,6 +828,11 @@ const WorkoutTracker = () => {
     setStartTime(Date.now());
     setLogStartTime(Date.now());
     setShowResult(false);
+
+    gtag("event", "workout_start", {
+      template_name: template.name,
+      exercise_count: exercises.length,
+    });
   };
 
   // Find this function in your code:
@@ -1428,6 +1433,8 @@ const WorkoutTracker = () => {
       weight: exerciseData ? exerciseData.defaultWeight : 50,
     };
 
+    gtag("event", "select_exercise", { exercise_name: exerciseName });
+
     setCurrentWorkout((prev) => ({
       ...prev,
       exercises: [...prev.exercises, newExercise],
@@ -1515,8 +1522,14 @@ const WorkoutTracker = () => {
     };
 
     setTemplates(updatedTemplates);
+
+    gtag("event", "template_create", {
+      template_name: newTemplateName,
+    });
+
     setShowSaveTemplate(false);
     setNewTemplateName("");
+
     setShowResult(false);
     setCurrentWorkout(null);
     setCompletedWorkoutData(null);
@@ -1580,6 +1593,14 @@ const WorkoutTracker = () => {
     const endTime = Date.now();
     const logDuration = endTime - logStartTime;
     const currentVolume = calculateVolume(currentWorkout.exercises);
+
+    gtag("event", "workout_complete", {
+      template_name: currentWorkout.templateName,
+      total_volume: currentVolume,
+      exercise_count: currentWorkout.exercises.length,
+      value: currentVolume,
+    });
+
     // Save last used settings for this template
     if (db) {
       try {
@@ -1798,14 +1819,20 @@ const WorkoutTracker = () => {
             <div className="flex items-center space-x-3">
               <h1 className="text-2xl font-semibold text-gray-900">History</h1>
               <button
-                onClick={() => exportUserData(db, workouts)}
+                onClick={() => {
+                  exportUserData(db, workouts);
+                  gtag("event", "export_data");
+                }}
                 className="py-1 px-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Download className="w-4 h-4" />
               </button>
             </div>
             <button
-              onClick={() => setShowHistory(false)}
+              onClick={() => {
+                setShowHistory(false);
+                gtag("event", "exit_history");
+              }}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -1893,10 +1920,12 @@ const WorkoutTracker = () => {
     `;
 
                           document.body.appendChild(modal);
-
                           document.getElementById("confirmDelete").onclick =
                             () => {
                               deleteWorkout(workout.id);
+                              gtag("event", "delete_workout", {
+                                template_name: workout.templateName,
+                              });
                               document.body.removeChild(modal);
                             };
 
@@ -1971,8 +2000,8 @@ const WorkoutTracker = () => {
     const { streak } = workoutResult;
 
     return (
-<div className="min-h-screen bg-gray-50 flex justify-center">
-<div className="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto p-6 self-center">
+      <div className="min-h-screen bg-gray-50 flex justify-center">
+        <div className="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto p-6 self-center">
           <div className="bg-white rounded-2xl p-8 text-center space-y-6 border border-gray-200">
             {/* Add this in the Results View after the existing streak congratulations */}
 
@@ -2037,7 +2066,10 @@ const WorkoutTracker = () => {
               </button>
 
               <button
-                onClick={resetApp}
+                onClick={() => {
+                  resetApp();
+                  gtag("event", "exit_results");
+                }}
                 className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium"
               >
                 Exit
@@ -2093,7 +2125,10 @@ const WorkoutTracker = () => {
               {currentWorkout.templateName}
             </h1>
             <button
-              onClick={() => setUseKg(!useKg)}
+              onClick={() => {
+                setUseKg(!useKg);
+                gtag("event", "toggle_units", { unit: useKg ? "lbs" : "kg" });
+              }}
               className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none ${
                 useKg ? "bg-blue-500" : "bg-green-500"
               }`}
@@ -2129,13 +2164,23 @@ const WorkoutTracker = () => {
                   />
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => duplicateExercise(exercise.id)}
+                      onClick={() => {
+                        duplicateExercise(exercise.id);
+                        gtag("event", "duplicate_exercise", {
+                          exercise_name: exercise.name,
+                        });
+                      }}
                       className="text-blue-600 hover:text-blue-800 p-3 sm:p-2 hover:bg-blue-50 rounded-lg transition-colors"
                     >
                       <Copy className="w-5 h-5 sm:w-4 sm:h-4" />
                     </button>
                     <button
-                      onClick={() => removeExercise(exercise.id)}
+                      onClick={() => {
+                        removeExercise(exercise.id);
+                        gtag("event", "delete_exercise", {
+                          exercise_name: exercise.name,
+                        });
+                      }}
                       className="text-red-600 hover:text-red-800 p-3 sm:p-2 hover:bg-red-50 rounded-lg transition-colors"
                       title="Remove exercise"
                     >
@@ -2313,7 +2358,10 @@ const WorkoutTracker = () => {
 
           <div className="space-y-4  px-6">
             <button
-              onClick={() => setShowExercisePicker(true)}
+              onClick={() => {
+                setShowExercisePicker(true);
+                gtag("event", "add_exercise");
+              }}
               className="w-full bg-blue-50 text-blue-600 py-4 px-6 rounded-xl font-medium hover:bg-blue-100 transition-colors border-2 border-dashed border-blue-200 flex items-center justify-center"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -2322,7 +2370,10 @@ const WorkoutTracker = () => {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setCurrentWorkout(null)}
+                onClick={() => {
+                  setCurrentWorkout(null);
+                  gtag("event", "workout_cancel");
+                }}
                 className="flex-1 bg-white border border-gray-200 text-gray-600 py-3 px-4 rounded-xl font-medium hover:bg-gray-100 transition-colors"
               >
                 Cancel
@@ -2340,7 +2391,7 @@ const WorkoutTracker = () => {
           {/* Exercise Picker Modal */}
           {showExercisePicker && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center p-4 z-50">
-<div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md h-[500px] overflow-hidden flex flex-col">
+              <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-md h-[500px] overflow-hidden flex flex-col">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Add Exercise</h3>
@@ -2365,9 +2416,9 @@ const WorkoutTracker = () => {
                 </div>
 
                 <div
-  className="overflow-y-auto flex-1"
-  style={{ minHeight: "300px" }}
->
+                  className="overflow-y-auto flex-1"
+                  style={{ minHeight: "300px" }}
+                >
                   {getFilteredExercises().map((exercise, index) => (
                     <button
                       key={index}
@@ -2444,7 +2495,10 @@ const WorkoutTracker = () => {
           </div>
 
           <button
-            onClick={() => setShowHistory(true)}
+            onClick={() => {
+              setShowHistory(true);
+              gtag("event", "view_progress");
+            }}
             className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <History className="w-5 h-5" />
@@ -2585,6 +2639,9 @@ const WorkoutTracker = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           togglePinTemplate(templateKey);
+                          gtag("event", "pin_template", {
+                            template_name: template.name,
+                          });
                         }}
                         className={`p-1 rounded-lg transition-colors ${
                           isPinned
@@ -2601,6 +2658,9 @@ const WorkoutTracker = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteTemplate(templateKey);
+                            gtag("event", "delete_template", {
+                              template_name: template.name,
+                            });
                           }}
                           className="p-1 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Delete template"
